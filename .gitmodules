@@ -1,0 +1,3 @@
+[submodule "linearizer_console"]
+	path = linearizer_console
+	url = https://github.com/DDRDmakar/linearizer_console.git
