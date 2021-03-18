@@ -1,0 +1,27 @@
+plugins {
+    id 'java'
+}
+
+group 'org.example'
+version '1.0-SNAPSHOT'
+
+repositories {
+    mavenCentral()
+    maven {
+        url "https://repo.eclipse.org/content/groups/releases/"
+    }
+}
+
+dependencies {
+    testCompile group: 'junit', name: 'junit', version: '4.12'
+
+    // JGit
+    implementation 'org.eclipse.jgit:org.eclipse.jgit:5.10.0.202012080955-r'
+    implementation 'org.eclipse.jgit:org.eclipse.jgit.archive:5.10.0.202012080955-r'
+    implementation 'org.eclipse.jgit:org.eclipse.jgit.ssh.jsch:5.10.0.202012080955-r'
+    implementation 'commons-io:commons-io:2.8.0'
+    implementation 'org.slf4j:slf4j-simple:1.7.30'
+
+    // optional dependency of commons-compress which is needed by JGit
+    implementation 'org.tukaani:xz:1.8'
+}
