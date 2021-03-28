@@ -4,9 +4,15 @@
 package git_lin;
 
 public class App {
+    /*
+      path to repository (temp)
+      JGit does not support paths with Cyrillic characters
+     */
+    String repoPath = "C:/Users/parsh/Desktop/gitlin/git_history_linearizer";
+
     public static void main(String[] args) {
         //System.out.println(new App().getGreeting());
         Main main = new Main();
-        main.openrepo("C:/Users/parsh/Desktop/gitlin/git_history_linearizer");
+        main.openrepo(repoPath);
     }
 }
