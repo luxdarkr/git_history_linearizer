@@ -12,15 +12,12 @@ import org.eclipse.jgit.storage.file.FileRepositoryBuilder;
 import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.revwalk.RevWalk;
 
-// Куски взяты отсюда
+// Code taken from here
 // https://github.com/centic9/jgit-cookbook/tree/master/src/main/java/org/dstadler/jgit
 
 public class Main {
-	public void openrepo() {
-		// Путь к репозиторию (пока хардкод)
-		File repoDir = new File("C:/rapidjson/.git");
-		// Почему-то пути, содержащие кириллицу, не работают. 
-		// File repoDir = new File("C:/Users/DDRDmakar/Documents/EDU/ТРПО/Tamagotchi-Atmega8");
+	public void openrepo(String repoPath) {
+		File repoDir = new File(repoPath);
 
 		// Creating repo object
 		FileRepositoryBuilder builder = new FileRepositoryBuilder();
@@ -31,8 +28,13 @@ public class Main {
 			System.out.println("Having repository: " + repository.getDirectory());
 
 			// The Ref holds an ObjectId for any type of object (tree, commit, blob, tree)
-			Ref head = repository.findRef("refs/heads/master");
-			System.out.println("Found head: " + head);
+			final String refName = "refs/heads/master";
+			Ref head = repository.findRef(refName);
+			if (head != null) {
+				System.out.println("Found head: " + head);
+			} else {
+				System.out.println("Cannot find head " + refName);
+			}
 
 			// A RevWalk allows to walk over commits based on some filtering that is defined
 			try (RevWalk walk = new RevWalk(repository)) {
@@ -42,6 +44,8 @@ public class Main {
 				System.out.println("\nCommit-Message: " + commit.getFullMessage());
 
 				walk.dispose();
+			} catch (Exception e) {
+				e.printStackTrace();
 			}
 		}
 		catch (IOException e) {

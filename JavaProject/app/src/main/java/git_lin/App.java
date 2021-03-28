@@ -7,6 +7,6 @@ public class App {
     public static void main(String[] args) {
         //System.out.println(new App().getGreeting());
         Main main = new Main();
-        main.openrepo();
+        main.openrepo("C:/Users/parsh/Desktop/gitlin/git_history_linearizer");
     }
 }
