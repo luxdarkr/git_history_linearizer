@@ -1,0 +1,3 @@
+ 
+rootProject.name = 'git_history_linearizer'
+include 'linearizer_core', 'linearizer_console', 'linearizer_idea'

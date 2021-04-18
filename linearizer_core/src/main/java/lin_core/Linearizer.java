@@ -1,4 +1,4 @@
-package git_lin;
+package lin_core;
 
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.revwalk.RevCommit;

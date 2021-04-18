@@ -1,4 +1,4 @@
-package git_lin;
+package lin_core;
 
 import java.io.IOException;
 import java.io.File;

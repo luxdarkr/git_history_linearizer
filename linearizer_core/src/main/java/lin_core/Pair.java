@@ -1,4 +1,4 @@
-package git_lin;
+package lin_core;
 
 // wtf why I need to implement this shit
 
