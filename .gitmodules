@@ -4,3 +4,6 @@
 [submodule "linearizer_idea"]
 	path = linearizer_idea
 	url = https://github.com/DDRDmakar/linearizer_idea.git
+[submodule "test_simple"]
+	path = test_simple
+	url = git@github.com:luxdarkr/git_test_simple.git
