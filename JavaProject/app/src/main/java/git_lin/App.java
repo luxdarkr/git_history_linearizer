@@ -8,7 +8,7 @@ public class App {
       path to repository (temp)
       JGit does not support paths with Cyrillic characters
      */
-    static String repoPath = "/tests/test_simple/.git";
+    static String repoPath = "/tests/git_test_simple/.git";
 
     public static void main(String[] args) {
         //System.out.println(new App().getGreeting());
