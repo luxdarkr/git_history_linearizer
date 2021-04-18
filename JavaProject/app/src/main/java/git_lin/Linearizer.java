@@ -4,6 +4,7 @@ import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.revwalk.RevCommit;
 
 import java.util.Dictionary;
+import java.util.List;
 
 public class Linearizer {
     Repository activeRepo = null;
@@ -36,11 +37,12 @@ public class Linearizer {
         if (start == null || end == null || newBranchName == null) {
             throw new NullPointerException();
         }
+        // TODO check branch name
         // TODO implement
         return lastResultCommits;
     }
 
-    public Pair squash(RevCommit start, RevCommit end) {
+    public Pair squash(RevCommit start, RevCommit end) throws NullPointerException {
         if (start == null || end == null) {
             throw new NullPointerException();
         }
@@ -48,8 +50,32 @@ public class Linearizer {
         return lastResultCommits;
     }
 
-    public Pair renameCommits(RevCommit start, RevCommit end, Dictionary<String, String> dict) throws NullPointerException {
-        if (start == null || end == null || dict == null) {
+    public Pair stripCommitMessages(RevCommit start, RevCommit end) throws NullPointerException {
+        if (start == null || end == null) {
+            throw new NullPointerException();
+        }
+        // TODO implement
+        return lastResultCommits;
+    }
+
+    public Pair fixCaseInCommitMessages(RevCommit start, RevCommit end) throws NullPointerException {
+        if (start == null || end == null) {
+            throw new NullPointerException();
+        }
+        // TODO implement
+        return lastResultCommits;
+    }
+
+    public Pair removeStarsAndPlusesInCommitMessages(RevCommit start, RevCommit end) throws NullPointerException {
+        if (start == null || end == null) {
+            throw new NullPointerException();
+        }
+        // TODO implement
+        return lastResultCommits;
+    }
+
+    public Pair fixBigCommitMessages(RevCommit start, RevCommit end) throws NullPointerException {
+        if (start == null || end == null) {
             throw new NullPointerException();
         }
         // TODO implement
