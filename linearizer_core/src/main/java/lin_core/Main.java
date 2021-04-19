@@ -34,19 +34,36 @@ public class Main {
 				System.out.println("Found head: " + head);
 			} else {
 				System.out.println("Cannot find head " + refName);
+				throw new IOException();
 			}
 
+			Linearizer repoLinearizer = new Linearizer(repository);
+
 			// A RevWalk allows to walk over commits based on some filtering that is defined
+			RevCommit start = null;
+			RevCommit end = null;
 			try (RevWalk walk = new RevWalk(repository)) {
 				RevCommit commit = walk.parseCommit(head.getObjectId());
+
+				end = commit;
 
 				// Print last commit message in master
 				System.out.println("\nCommit-Message: " + commit.getFullMessage());
 
+				while (commit != null) {
+					start = commit;
+					// if (commit.getParentCount() != 0) {
+					if (commit.getParents() != null && commit.getParentCount() == 1) {
+						commit = commit.getParent(0);
+					} else {
+						break;
+					}
+				}
 				walk.dispose();
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
+			repoLinearizer.removeStarsAndPlusesInCommitMessages(start, end);
 		}
 		catch (IOException e) {
 			System.out.println("!!!!!!!!!!!!!!!!!!!!");

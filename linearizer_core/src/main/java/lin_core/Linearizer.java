@@ -4,6 +4,7 @@ import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.revwalk.RevCommit;
 
 import java.util.Dictionary;
+import java.util.LinkedList;
 import java.util.List;
 
 public class Linearizer {
@@ -70,7 +71,20 @@ public class Linearizer {
         if (start == null || end == null) {
             throw new NullPointerException();
         }
-        // TODO implement
+        List<RevCommit> commitsToFix = new LinkedList<>();
+        for (RevCommit current = end; current != null && current != start; current = current.getParent(0)) { // TODO create walk method
+            if (current.getFullMessage().startsWith("*") || current.getFullMessage().startsWith("+")) { // TODO check from list
+                commitsToFix.add(current);
+            }
+            if (current.getParents() == null || current.getParents().length == 0) {
+                break;
+            }
+        }
+        for (RevCommit commit : commitsToFix) {
+            // TODO find a way to rename commit
+            System.out.println(commit.getFullMessage());
+        }
+        lastResultCommits = new Pair(start, end);
         return lastResultCommits;
     }
 
