@@ -4,7 +4,7 @@ linearizer - tool for simplyfying git history.
 `linearizer [options]... <start> <end>`
 ##### Description:
 `-h, --help`  
-Show help screen.  
+Shows help screen.  
 `-l, --linearize`  
 Performs linearization between first and last commits, then puts it in a new fork.  
 `-s, --squash`  
