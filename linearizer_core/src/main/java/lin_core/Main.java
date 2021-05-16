@@ -1,7 +1,10 @@
 package lin_core;
 
-import java.io.IOException;
 import java.io.File;
+import java.io.IOException;
+import java.util.Map;
+import java.util.TreeMap;
+
 import org.apache.commons.io.FileUtils;
 
 //import org.eclipse.jgit.api.Git;
@@ -37,8 +40,6 @@ public class Main {
 				throw new IOException();
 			}
 
-			Linearizer repoLinearizer = new Linearizer(repository);
-
 			// A RevWalk allows to walk over commits based on some filtering that is defined
 			RevCommit start = null;
 			RevCommit end = null;
@@ -63,11 +64,17 @@ public class Main {
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
-			repoLinearizer.removeStarsAndPlusesInCommitMessages(start, end);
+
+			Map<String, String[]> settings = new TreeMap<>();
+			settings.put("badStarts", new String[] {"*", "+"});
+			Linearizer.processRepo(repository, start, settings);
+			//repoLinearizer.removeStarsAndPlusesInCommitMessages(start, end);
 		}
 		catch (IOException e) {
 			System.out.println("!!!!!!!!!!!!!!!!!!!!");
 			System.out.println(e);
+		} catch (Exception e) {
+			e.printStackTrace();
 		}
 		/*catch (GitAPIException e) {
 			System.out.println("!!!!!!!!!!!!!!!!!!!!");

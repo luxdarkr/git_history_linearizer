@@ -3,95 +3,98 @@ package lin_core;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.revwalk.RevCommit;
 
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
 
 public class Linearizer {
-    Repository activeRepo = null;
-    CommitPair lastResultCommits = null;
-
-    Linearizer(Repository repo) {
-        activeRepo = repo;
-    }
-
-    public CommitPair getLastResultCommits() throws NullPointerException {
-        return lastResultCommits;
-    }
-
-    public void changeRepo(Repository repo) throws NullPointerException {
-        if (repo == null) {
+    public static CommitPair processRepo(Repository repo, RevCommit start, Map<String, String[]> settings) throws Exception { // TODO better method name and args
+        if (repo == null || start == null || settings == null) {
             throw new NullPointerException();
         }
-        activeRepo = repo;
-        lastResultCommits = null;
+        CommitMessages messages = new CommitMessages();
+        // TODO walk in repo and find all commits from start
+        // it seems like JGit doesn't support direct child getting
+
+        // test code start
+        messages.set(start, "*** message");
+        // test code end
+
+        if (settings.containsKey("badStarts")) {
+            messages = strip(removeBadStarts(messages, settings.get("badStarts")));
+        }
+
+        // test code start
+        System.out.println("Commit messages after processing:");
+        messages.apply((String s) -> { // test output
+            System.out.println(s);
+            return s;
+        });
+        // test code end
+        return new CommitPair(null, null);
     }
 
-    public CommitPair linearize(RevCommit start, RevCommit end) throws Exception {
+    private static CommitPair linearize(RevCommit start, RevCommit end) throws Exception {
         String branchName = "";
-        // TODO: build branch based on repo head name
+        // TODO build branch based on repo head name
         branchName = "result";
         return linearize(start, end, branchName);
     }
 
-    public CommitPair linearize(RevCommit start, RevCommit end, String newBranchName) throws Exception {
+    private static CommitPair linearize(RevCommit start, RevCommit end, String newBranchName) throws Exception {
         if (start == null || end == null || newBranchName == null) {
             throw new NullPointerException();
         }
         // TODO check branch name
         // TODO implement
-        return lastResultCommits;
+        return new CommitPair(start, end);
     }
 
-    public CommitPair squash(RevCommit start, RevCommit end) throws NullPointerException {
-        if (start == null || end == null) {
+    /*
+    // TODO consider when to use: at linearization time (not obvious) or after (slow)
+    private static CommitMessages squash(CommitMessages messages) throws NullPointerException {
+        if (messages == null) {
             throw new NullPointerException();
         }
         // TODO implement
-        return lastResultCommits;
+        return messages;
     }
+     */
 
-    public CommitPair stripCommitMessages(RevCommit start, RevCommit end) throws NullPointerException {
-        if (start == null || end == null) {
+    private static CommitMessages fixCaseInCommitMessages(CommitMessages messages) throws NullPointerException {
+        if (messages == null) {
             throw new NullPointerException();
         }
         // TODO implement
-        return lastResultCommits;
+        return messages;
     }
 
-    public CommitPair fixCaseInCommitMessages(RevCommit start, RevCommit end) throws NullPointerException {
-        if (start == null || end == null) {
+    private static CommitMessages removeBadStarts(CommitMessages messages, String[] badNameStarts) throws NullPointerException {
+        if (messages == null) {
             throw new NullPointerException();
         }
-        // TODO implement
-        return lastResultCommits;
-    }
-
-    public CommitPair removeStarsAndPlusesInCommitMessages(RevCommit start, RevCommit end) throws NullPointerException {
-        if (start == null || end == null) {
-            throw new NullPointerException();
-        }
-        List<RevCommit> commitsToFix = new LinkedList<>();
-        for (RevCommit current = end; current != null && current != start; current = current.getParent(0)) { // TODO create walk method
-            if (current.getFullMessage().startsWith("*") || current.getFullMessage().startsWith("+")) { // TODO check from list
-                commitsToFix.add(current);
+        messages.apply((String name) -> {
+            for (String template : badNameStarts) {
+                while (name.startsWith(template)) {
+                    name = name.substring(template.length());
+                }
             }
-            if (current.getParents() == null || current.getParents().length == 0) {
-                break;
-            }
-        }
-        for (RevCommit commit : commitsToFix) {
-            // TODO find a way to rename commit
-            System.out.println(commit.getFullMessage());
-        }
-        lastResultCommits = new CommitPair(start, end);
-        return lastResultCommits;
+            return name;
+        });
+        return messages;
     }
 
-    public CommitPair fixBigCommitMessages(RevCommit start, RevCommit end) throws NullPointerException {
-        if (start == null || end == null) {
+    private static CommitMessages strip(CommitMessages messages) throws NullPointerException {
+        if (messages == null) {
+            throw new NullPointerException();
+        }
+        messages.apply((String name) -> name.strip());
+        return messages;
+    }
+
+    private static CommitMessages fixBigCommitMessages(CommitMessages messages) throws NullPointerException {
+        if (messages == null) {
             throw new NullPointerException();
         }
         // TODO implement
-        return lastResultCommits;
+        return messages;
     }
 }
