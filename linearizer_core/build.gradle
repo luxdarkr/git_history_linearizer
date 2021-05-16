@@ -2,6 +2,19 @@ plugins {
     id 'java'
 }
 
+def runShellScriptWithArgs(String scriptName, String dir, String[] args) {
+    def currentDir = System.getProperty('user.dir')
+    def scriptDir = currentDir + dir
+    def downloadTestsScript = new File(scriptDir + '/' + scriptName)
+    downloadTestsScript.getText().execute(args, new File(scriptDir))
+}
+
+def runShellScript(scriptName, dir) {
+    runShellScriptWithArgs(scriptName, dir, [] as String[])
+}
+
+runShellScript('clone_tests.sh', '/tests')
+
 group 'org.example'
 version '1.0-SNAPSHOT'
 
