@@ -1,18 +1,21 @@
 package lin_core;
 
+import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.Ref;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.revwalk.RevWalk;
+import org.eclipse.jgit.storage.file.FileRepositoryBuilder;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.*;
 
 public class Linearizer {
     public static class RepoNode {
-        public Set<RepoNode> parents = new HashSet<>();
-        public Set<RepoNode> childs = new HashSet<>();
+        public List<RepoNode> parents = new LinkedList<>();
+        public List<RepoNode> childs = new LinkedList<>();
         RevCommit commit;
     }
 
@@ -21,58 +24,70 @@ public class Linearizer {
         public Map<RevCommit, RepoNode> nodes = new HashMap<>();
     }
 
+    public static Repository openRepo(String path) throws Exception {
+        File repoDir = new File(path);
+        FileRepositoryBuilder builder = new FileRepositoryBuilder();
+        return builder.setGitDir(repoDir).readEnvironment().findGitDir().build();
+    }
+
+    public static CommitPair processRepo(String repoPath, String refName, String startCommitId, Map<String, String[]> settings) throws Exception {
+        return processRepo(openRepo(repoPath), refName, startCommitId, settings);
+    }
+
     public static CommitPair processRepo(Repository repo, String refName, String startCommitId, Map<String, String[]> settings) throws Exception { // TODO better method name and args
         if (repo == null || refName == null || startCommitId == null || settings == null) {
             throw new NullPointerException();
         }
+        Ref head = repo.findRef(refName);
+        if (head == null) {
+            System.out.println("Cannot find head " + refName);
+            throw new IOException();
+        }
+        RevWalk walk = new RevWalk(repo);
+        RevCommit commit = walk.parseCommit(head.getObjectId());
+        RevCommit startCommit = walk.parseCommit(ObjectId.fromString(startCommitId));
+        if (startCommit == null) {
+            throw new NullPointerException();
+        }
         CommitMessages messages = new CommitMessages();
-        // TODO walk in repo and find all commits from start
-        // it seems like JGit doesn't support direct child getting
 
-        RevCommit start = null;
+        Git git = new Git(repo);
         RepoTree tree = new RepoTree();
-        try (RevWalk walk = new RevWalk(repo)) {
-            Ref head = repo.findRef(refName);
-            if (head == null) {
-                System.out.println("Cannot find head " + refName);
-                throw new IOException();
-            }
-            RevCommit commit = walk.parseCommit(head.getObjectId());
-            start = walk.parseCommit(ObjectId.fromString(startCommitId));
-            if (start == null) {
-                throw new NullPointerException();
-            }
-            tree.head = new RepoNode();
-            tree.head.commit = commit;
+        tree.head = new RepoNode();
+        tree.head.commit = commit;
+        tree.nodes.put(commit, tree.head);
 
-            RepoNode prevNode = null;
-            while (commit != start && commit != null) {
-                String commitId = commit.getId().toObjectId().toString().substring(7, 7 + 40);
-                messages.set(walk.parseCommit(ObjectId.fromString(commitId)), commit.getFullMessage());
-                if (commit.getParents() != null) {
-                    int parentCount = commit.getParentCount();
-                    if (parentCount == 1) {
-                        RepoNode repoNode = new RepoNode();
-
-                        tree.nodes.put(commit, repoNode);
-                        if (prevNode != null) {
-                            repoNode.childs.add(prevNode);
-                        }
-                        commit = commit.getParent(0);
-                        prevNode = repoNode;
-                    } else {
-                        commit = null;
+        RepoNode prevNode = null;
+        while (commit != startCommit && commit != null) {
+            String commitId = commit.getId().toObjectId().toString().substring(7, 7 + 40);
+            messages.set(walk.parseCommit(ObjectId.fromString(commitId)), commit.getFullMessage());
+            if (commit.getParents() != null) {
+                int parentCount = commit.getParentCount();
+                if (parentCount == 1) {
+                    RepoNode repoNode = new RepoNode();
+                    if (prevNode != null) {
+                        repoNode.childs.add(prevNode);
                     }
+                    repoNode.commit = commit;
+                    tree.nodes.put(commit, repoNode);
+
+                    commit = commit.getParent(0);
+                    prevNode = repoNode;
                 } else {
                     commit = null;
                 }
+            } else {
+                commit = null;
             }
-
-            walk.dispose();
-        } catch (Exception e) {
-            e.printStackTrace();
         }
-
+        if (commit == startCommit) {
+            RepoNode repoNode = new RepoNode();
+            if (prevNode != null) {
+                repoNode.childs.add(prevNode);
+            }
+            repoNode.commit = commit;
+            tree.nodes.put(commit, repoNode);
+        }
         // use messages.apply(private func String -> String) ?
         if (settings.containsKey("badStarts")) {
             removeBadStartsInCommitMessages(messages, settings.get("badStarts"));
@@ -81,16 +96,46 @@ public class Linearizer {
             stripCommitMessages(messages);
         }
         if (settings.containsKey("fixCase")) {
-            fixBigCommitMessages(messages);
+            fixCaseInCommitMessages(messages);
+        }
+        String resultBranchName = "linearizer_work";
+
+        List<Ref> branchNameRefs = git.branchList().call();
+        List<String> branchNames = new LinkedList<>();
+        for (Ref ref : branchNameRefs) {
+            branchNames.add(ref.getName());
+        }
+        while (branchNames.contains("refs/heads/" + resultBranchName)) {
+            resultBranchName += '_';
+        }
+        git.branchCreate()
+                .setName(resultBranchName)
+                .setStartPoint(startCommit)
+                .call();
+        git.checkout()
+                .setName(resultBranchName)
+                .call();
+        RepoNode node = tree.nodes.get(startCommit);
+        while (node != null) {
+            RevCommit cpCommit = node.commit;
+            String newMessage = messages.get(cpCommit);
+            if (newMessage != null) {
+                git.cherryPick()
+                        .include(cpCommit)
+                        .call();
+                git.commit()
+                        .setAmend(true)
+                        .setMessage(newMessage)
+                        .call();
+            }
+            if (node.childs.isEmpty()) {
+                break;
+            }
+            node = node.childs.get(0);
         }
 
-        // test code start
-        System.out.println("Commit messages after processing:");
-        messages.apply((String s) -> { // test output
-            System.out.println(s);
-            return s;
-        });
-        // test code end
+        walk.dispose();
+        git.close();
         return new CommitPair(null, null);
     }
 
