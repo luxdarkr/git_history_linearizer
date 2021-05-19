@@ -1,25 +1,87 @@
 package lin_core;
 
+import org.eclipse.jgit.lib.ObjectId;
+import org.eclipse.jgit.lib.Ref;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.revwalk.RevCommit;
+import org.eclipse.jgit.revwalk.RevWalk;
 
+import java.io.IOException;
 import java.util.*;
 
 public class Linearizer {
-    public static CommitPair processRepo(Repository repo, RevCommit start, Map<String, String[]> settings) throws Exception { // TODO better method name and args
-        if (repo == null || start == null || settings == null) {
+    public static class RepoNode {
+        public Set<RepoNode> parents = new HashSet<>();
+        public Set<RepoNode> childs = new HashSet<>();
+        RevCommit commit;
+    }
+
+    public static class RepoTree {
+        public RepoNode head;
+        public Map<RevCommit, RepoNode> nodes = new HashMap<>();
+    }
+
+    public static CommitPair processRepo(Repository repo, String refName, String startCommitId, Map<String, String[]> settings) throws Exception { // TODO better method name and args
+        if (repo == null || refName == null || startCommitId == null || settings == null) {
             throw new NullPointerException();
         }
         CommitMessages messages = new CommitMessages();
         // TODO walk in repo and find all commits from start
         // it seems like JGit doesn't support direct child getting
 
-        // test code start
-        messages.set(start, "*** message");
-        // test code end
+        RevCommit start = null;
+        RepoTree tree = new RepoTree();
+        try (RevWalk walk = new RevWalk(repo)) {
+            Ref head = repo.findRef(refName);
+            if (head == null) {
+                System.out.println("Cannot find head " + refName);
+                throw new IOException();
+            }
+            RevCommit commit = walk.parseCommit(head.getObjectId());
+            start = walk.parseCommit(ObjectId.fromString(startCommitId));
+            if (start == null) {
+                throw new NullPointerException();
+            }
+            tree.head = new RepoNode();
+            tree.head.commit = commit;
 
+            RepoNode prevNode = null;
+            while (commit != start && commit != null) {
+                String commitId = commit.getId().toObjectId().toString().substring(7, 7 + 40);
+                messages.set(walk.parseCommit(ObjectId.fromString(commitId)), commit.getFullMessage());
+                if (commit.getParents() != null) {
+                    int parentCount = commit.getParentCount();
+                    if (parentCount == 1) {
+                        RepoNode repoNode = new RepoNode();
+
+                        tree.nodes.put(commit, repoNode);
+                        if (prevNode != null) {
+                            repoNode.childs.add(prevNode);
+                        }
+                        commit = commit.getParent(0);
+                        prevNode = repoNode;
+                    } else {
+                        commit = null;
+                    }
+                } else {
+                    commit = null;
+                }
+            }
+
+            walk.dispose();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        // use messages.apply(private func String -> String) ?
         if (settings.containsKey("badStarts")) {
-            messages = strip(removeBadStarts(messages, settings.get("badStarts")));
+            removeBadStartsInCommitMessages(messages, settings.get("badStarts"));
+        }
+        if (settings.containsKey("strip")) {
+            stripCommitMessages(messages);
+        }
+        if (settings.containsKey("fixCase")) {
+            fixBigCommitMessages(messages);
         }
 
         // test code start
@@ -63,11 +125,20 @@ public class Linearizer {
         if (messages == null) {
             throw new NullPointerException();
         }
-        // TODO implement
+        messages.apply((String name) -> {
+            if (name.length() == 0) {
+                return name;
+            }
+            Character firstChar = name.charAt(0);
+            if (Character.isLowerCase(firstChar)) {
+                return Character.toUpperCase(firstChar) + name.substring(1);
+            }
+            return name;
+        });
         return messages;
     }
 
-    private static CommitMessages removeBadStarts(CommitMessages messages, String[] badNameStarts) throws NullPointerException {
+    private static CommitMessages removeBadStartsInCommitMessages(CommitMessages messages, String[] badNameStarts) throws NullPointerException {
         if (messages == null) {
             throw new NullPointerException();
         }
@@ -82,7 +153,7 @@ public class Linearizer {
         return messages;
     }
 
-    private static CommitMessages strip(CommitMessages messages) throws NullPointerException {
+    private static CommitMessages stripCommitMessages(CommitMessages messages) throws NullPointerException {
         if (messages == null) {
             throw new NullPointerException();
         }

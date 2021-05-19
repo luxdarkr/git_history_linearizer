@@ -3,6 +3,20 @@
  */
 package lin_core;
 
+import org.eclipse.jgit.lib.ObjectId;
+import org.eclipse.jgit.lib.Ref;
+import org.eclipse.jgit.lib.Repository;
+import org.eclipse.jgit.revwalk.RevCommit;
+import org.eclipse.jgit.revwalk.RevWalk;
+import org.eclipse.jgit.storage.file.FileRepositoryBuilder;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
+import java.util.TreeMap;
+
 public class App {
     /*
       path to repository (temp)
@@ -10,11 +24,24 @@ public class App {
      */
     static String relativeRepoPath = "/tests/git_test_simple/.git";
 
-    public static void main(String[] args) {
-        //System.out.println(new App().getGreeting());
-        Main main = new Main();
+    public static void main(String[] args) throws Exception {
         String currentDir = System.getProperty("user.dir");
         String newRepoPath = currentDir + relativeRepoPath;
-        main.openrepo(newRepoPath);
+        openrepo(newRepoPath);
+    }
+
+    public static void openrepo(String repoPath) throws Exception {
+        File repoDir = new File(repoPath);
+        FileRepositoryBuilder builder = new FileRepositoryBuilder();
+        try (Repository repository = builder.setGitDir(repoDir).readEnvironment().findGitDir().build()) {
+            String[] emptyParams = new String[0];
+            Map<String, String[]> settings = new TreeMap<>();
+            settings.put("badStarts", new String[] {"*", "+"});
+            settings.put("strip", emptyParams);
+            settings.put("fixCase", emptyParams);
+            Linearizer.processRepo(repository, "refs/heads/master", "e40fc2fbea20214634e22445d2339e59b5067017", settings);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 }
