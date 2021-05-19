@@ -28,5 +28,9 @@ dependencies {
     // optional dependency of commons-compress which is needed by JGit
     implementation 'org.tukaani:xz:1.8'
 
+    // https://mvnrepository.com/artifact/args4j/args4j
+    implementation group: 'args4j', name: 'args4j', version: '2.33'
+
+
     implementation project(':linearizer_core')
 }
