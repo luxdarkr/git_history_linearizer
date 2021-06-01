@@ -166,7 +166,7 @@ public class Linearizer {
     }
      */
 
-    private static CommitMessages fixCaseInCommitMessages(CommitMessages messages) throws NullPointerException {
+    private static void fixCaseInCommitMessages(CommitMessages messages) throws NullPointerException {
         if (messages == null) {
             throw new NullPointerException();
         }
@@ -180,10 +180,9 @@ public class Linearizer {
             }
             return name;
         });
-        return messages;
     }
 
-    private static CommitMessages removeBadStartsInCommitMessages(CommitMessages messages, String[] badNameStarts) throws NullPointerException {
+    private static void removeBadStartsInCommitMessages(CommitMessages messages, String[] badNameStarts) throws NullPointerException {
         if (messages == null) {
             throw new NullPointerException();
         }
@@ -195,22 +194,19 @@ public class Linearizer {
             }
             return name;
         });
-        return messages;
     }
 
-    private static CommitMessages stripCommitMessages(CommitMessages messages) throws NullPointerException {
+    private static void stripCommitMessages(CommitMessages messages) throws NullPointerException {
         if (messages == null) {
             throw new NullPointerException();
         }
         messages.apply((String name) -> name.strip());
-        return messages;
     }
 
-    private static CommitMessages fixBigCommitMessages(CommitMessages messages) throws NullPointerException {
+    private static void fixBigCommitMessages(CommitMessages messages) throws NullPointerException {
         if (messages == null) {
             throw new NullPointerException();
         }
         // TODO implement
-        return messages;
     }
 }
