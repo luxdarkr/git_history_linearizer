@@ -1,10 +1,12 @@
 package lin_core;
 
 import org.eclipse.jgit.api.Git;
+import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.Ref;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.revwalk.RevCommit;
+import org.eclipse.jgit.revwalk.RevTree;
 import org.eclipse.jgit.revwalk.RevWalk;
 import org.eclipse.jgit.storage.file.FileRepositoryBuilder;
 
@@ -17,6 +19,37 @@ public class Linearizer {
         public List<RepoNode> parents = new LinkedList<>();
         public List<RepoNode> childs = new LinkedList<>();
         RevCommit commit;
+    }
+
+    public static class Settings {
+        public boolean strip = false;
+        public boolean fixCase = false;
+        public String[] badStarts = null;
+    }
+
+    // TODO refactor in project scape
+    // TODO move names
+    // TODO add class for message fixing
+    public static Settings generateSettings(Map<String, String[]> settings) throws Exception {
+        Settings result = new Settings();
+        if (settings.containsKey("badStarts")) {
+            result.badStarts = settings.get("badStarts");
+            for (String entry : result.badStarts) {
+                if (entry == null) {
+                    throw new NullPointerException();
+                }
+                if (entry.length() == 0) {
+                    throw new Exception("empty string passed as bad start template");
+                }
+            }
+        }
+        if (settings.containsKey("strip")) {
+            result.strip = true;
+        }
+        if (settings.containsKey("fixCase")) {
+            result.fixCase = true;
+        }
+        return result;
     }
 
     public static class RepoTree {
@@ -34,33 +67,80 @@ public class Linearizer {
         return processRepo(openRepo(repoPath), refName, startCommitId, settings);
     }
 
-    public static CommitPair processRepo(Repository repo, String refName, String startCommitId, Map<String, String[]> settings) throws Exception { // TODO better method name and args
-        if (repo == null || refName == null || startCommitId == null || settings == null) {
+    private static void createAndSwitchBranch(Git git, RevCommit commit) throws GitAPIException {
+        String resultBranchName = "linearizer_work";
+
+        List<Ref> branchNameRefs = git.branchList().call();
+        List<String> branchNames = new LinkedList<>();
+        for (Ref ref : branchNameRefs) {
+            branchNames.add(ref.getName());
+        }
+        while (branchNames.contains("refs/heads/" + resultBranchName)) {
+            resultBranchName += '_';
+        }
+        git.branchCreate()
+                .setName(resultBranchName)
+                .setStartPoint(commit)
+                .call();
+        git.checkout()
+                .setName(resultBranchName)
+                .call();
+    }
+
+    public static CommitPair processRepo(Repository repo, String refName, String startCommitId, Map<String, String[]> settingsMap) throws Exception { // TODO better method name and args
+        if (repo == null || refName == null || startCommitId == null || settingsMap == null) {
             throw new NullPointerException();
         }
+        Settings settings = generateSettings(settingsMap);
         Ref head = repo.findRef(refName);
         if (head == null) {
             System.out.println("Cannot find head " + refName);
             throw new IOException();
         }
         RevWalk walk = new RevWalk(repo);
-        RevCommit commit = walk.parseCommit(head.getObjectId());
         RevCommit startCommit = walk.parseCommit(ObjectId.fromString(startCommitId));
         if (startCommit == null) {
             throw new NullPointerException();
         }
-        CommitMessages messages = new CommitMessages();
 
         Git git = new Git(repo);
+        RepoTree tree = buildTree(walk, head, startCommit);
+        createAndSwitchBranch(git, startCommit);
+        linearize(tree, git, startCommit, settings);
+
+        walk.dispose();
+        git.close();
+        return new CommitPair(null, null);
+    }
+
+    private static String fixString(String original, Settings settings) {
+        String result = original;
+        if (settings.badStarts != null) {
+            result = removeBadStarts(result, settings.badStarts);
+        }
+        if (settings.fixCase) {
+            result = fixCase(result);
+        }
+        if (settings.strip) {
+            result = strip(result);
+        }
+        return result;
+    }
+
+    public static String getCommitSHA(RevCommit commit) throws Exception {
+        return commit.getId().toObjectId().toString().substring(7, 7 + 40);
+    }
+
+    private static RepoTree buildTree(RevWalk walk, Ref head, RevCommit startCommit) throws IOException {
         RepoTree tree = new RepoTree();
+        RevCommit commit = walk.parseCommit(head.getObjectId());
         tree.head = new RepoNode();
         tree.head.commit = commit;
         tree.nodes.put(commit, tree.head);
 
         RepoNode prevNode = null;
         while (commit != startCommit && commit != null) {
-            String commitId = commit.getId().toObjectId().toString().substring(7, 7 + 40);
-            messages.set(walk.parseCommit(ObjectId.fromString(commitId)), commit.getFullMessage());
+            walk.parseCommit(commit.getId());
             if (commit.getParents() != null) {
                 int parentCount = commit.getParentCount();
                 if (parentCount == 1) {
@@ -88,37 +168,20 @@ public class Linearizer {
             repoNode.commit = commit;
             tree.nodes.put(commit, repoNode);
         }
-        // use messages.apply(private func String -> String) ?
-        if (settings.containsKey("badStarts")) {
-            removeBadStartsInCommitMessages(messages, settings.get("badStarts"));
-        }
-        if (settings.containsKey("strip")) {
-            stripCommitMessages(messages);
-        }
-        if (settings.containsKey("fixCase")) {
-            fixCaseInCommitMessages(messages);
-        }
-        String resultBranchName = "linearizer_work";
+        return tree;
+    }
 
-        List<Ref> branchNameRefs = git.branchList().call();
-        List<String> branchNames = new LinkedList<>();
-        for (Ref ref : branchNameRefs) {
-            branchNames.add(ref.getName());
+    private static CommitPair linearize(RepoTree tree, Git git, RevCommit startCommit, Settings settings) throws Exception {
+        if (tree == null || git == null || startCommit == null || settings == null) {
+            throw new NullPointerException();
         }
-        while (branchNames.contains("refs/heads/" + resultBranchName)) {
-            resultBranchName += '_';
-        }
-        git.branchCreate()
-                .setName(resultBranchName)
-                .setStartPoint(startCommit)
-                .call();
-        git.checkout()
-                .setName(resultBranchName)
-                .call();
+        // TODO check branch name
+        // TODO implement
+
         RepoNode node = tree.nodes.get(startCommit);
         while (node != null) {
             RevCommit cpCommit = node.commit;
-            String newMessage = messages.get(cpCommit);
+            String newMessage = fixString(cpCommit.getFullMessage().toString(), settings);
             if (newMessage != null) {
                 git.cherryPick()
                         .include(cpCommit)
@@ -133,26 +196,7 @@ public class Linearizer {
             }
             node = node.childs.get(0);
         }
-
-        walk.dispose();
-        git.close();
-        return new CommitPair(null, null);
-    }
-
-    private static CommitPair linearize(RevCommit start, RevCommit end) throws Exception {
-        String branchName = "";
-        // TODO build branch based on repo head name
-        branchName = "result";
-        return linearize(start, end, branchName);
-    }
-
-    private static CommitPair linearize(RevCommit start, RevCommit end, String newBranchName) throws Exception {
-        if (start == null || end == null || newBranchName == null) {
-            throw new NullPointerException();
-        }
-        // TODO check branch name
-        // TODO implement
-        return new CommitPair(start, end);
+        return new CommitPair(startCommit, startCommit);
     }
 
     /*
@@ -166,51 +210,33 @@ public class Linearizer {
     }
      */
 
-    private static CommitMessages fixCaseInCommitMessages(CommitMessages messages) throws NullPointerException {
-        if (messages == null) {
-            throw new NullPointerException();
+    private static String fixCase(String original) throws NullPointerException {
+        if (original.length() == 0) {
+            return original;
         }
-        messages.apply((String name) -> {
-            if (name.length() == 0) {
-                return name;
-            }
-            Character firstChar = name.charAt(0);
-            if (Character.isLowerCase(firstChar)) {
-                return Character.toUpperCase(firstChar) + name.substring(1);
-            }
-            return name;
-        });
-        return messages;
+        Character firstChar = original.charAt(0);
+        if (Character.isLowerCase(firstChar)) {
+            return Character.toUpperCase(firstChar) + original.substring(1);
+        }
+        return original;
     }
 
-    private static CommitMessages removeBadStartsInCommitMessages(CommitMessages messages, String[] badNameStarts) throws NullPointerException {
-        if (messages == null) {
-            throw new NullPointerException();
-        }
-        messages.apply((String name) -> {
-            for (String template : badNameStarts) {
-                while (name.startsWith(template)) {
-                    name = name.substring(template.length());
-                }
+    private static String removeBadStarts(String original, String[] badNameStarts) throws NullPointerException {
+        String result = original;
+        for (String template : badNameStarts) {
+            while (result.startsWith(template)) {
+                result = result.substring(template.length());
             }
-            return name;
-        });
-        return messages;
+        }
+        return result;
     }
 
-    private static CommitMessages stripCommitMessages(CommitMessages messages) throws NullPointerException {
-        if (messages == null) {
-            throw new NullPointerException();
-        }
-        messages.apply((String name) -> name.strip());
-        return messages;
+    private static String strip(String original) throws NullPointerException {
+        return original.strip();
     }
 
-    private static CommitMessages fixBigCommitMessages(CommitMessages messages) throws NullPointerException {
-        if (messages == null) {
-            throw new NullPointerException();
-        }
+    private static String fixBigCommitMessage(String original) throws NullPointerException {
         // TODO implement
-        return messages;
+        return original;
     }
 }
