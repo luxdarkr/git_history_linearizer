@@ -23,6 +23,7 @@ import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
+import org.kohsuke.args4j.spi.StringArrayOptionHandler;
 
 
 // Parts taken from this repo:
@@ -41,9 +42,11 @@ public class Main {
     @Option(
             name = "-l",
             aliases = "--linearize",
+            handler = StringArrayOptionHandler.class,
+            required = true,
             usage = "Performs linearization between first and last commits, then puts it in a new fork."
             )
-    private boolean lin;
+    private List<String> list;
 
     @Argument
     private List<String> args = new ArrayList<String>();
@@ -74,13 +77,13 @@ public class Main {
         }
 
 
-        if(lin){
+        if(list.isEmpty() == false){
             String[] emptyParams = new String[0];
             Map<String, String[]> settings = new TreeMap<>();
             settings.put("badStarts", new String[] {"*", "+"});
             settings.put("strip", emptyParams);
             settings.put("fixCase", emptyParams);
-            Linearizer.processRepo("D:\\git_linearizer\\tests\\git_test_simple\\.git", "refs/heads/master", "e40fc2fbea20214634e22445d2339e59b5067017", settings  );
+            Linearizer.processRepo(list.get(0), list.get(1), list.get(2), settings  );
         }
 
     }
