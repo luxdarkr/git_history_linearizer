@@ -1,0 +1,32 @@
+<!-- Copyright 2000-2020 JetBrains s.r.o. and other contributors. Use of this source code is governed by the Apache 2.0 license that can be found in the LICENSE file. -->
+
+<idea-plugin>
+
+  <!-- Unique id for this plugin. Must stay constant for the life of the plugin. -->
+  <id>ru.spbstu.iknt.linearizer_idea</id>
+
+  <!-- Text to display as name on Preferences/Settings | Plugin page -->
+  <name>Git history linearizer</name>
+
+  <!-- Indicate this plugin can be loaded in all IntelliJ Platform-based products. -->
+  <depends>com.intellij.modules.platform</depends>
+
+  <!-- Text to display as description on Preferences/Settings | Plugin page -->
+  <description>
+    <![CDATA[
+    Git history linearizer plugin
+    ]]>
+  </description>
+  <change-notes><![CDATA[
+    changenotes
+  ]]></change-notes>
+
+  <!-- Text to display as company information on Preferences/Settings | Plugin page -->
+  <vendor url="https://plugins.jetbrains.com">Saint-Petersburg Polytechnical University</vendor>
+
+  <extensions defaultExtensionNs="com.intellij">
+    <toolWindow id="Git history linearizer" secondary="true" icon="AllIcons.Vcs.Vendors.Github" anchor="right"
+                factoryClass="lin_idea.LinearizerToolWindowFactory"/>
+  </extensions>
+
+</idea-plugin>
