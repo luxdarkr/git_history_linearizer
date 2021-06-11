@@ -22,8 +22,15 @@ public class Main {
             aliases = "--help",
             forbids ={"-l"},
             usage = "Shows help screen."
-            )
+    )
     private boolean help;
+
+    @Option(
+            name = "-s",
+            aliases = "--strip",
+            usage = "Strip commit messages after linearize"
+    )
+    private boolean strip = false;
 
     @Option(
             name = "-l",
@@ -73,7 +80,9 @@ public class Main {
                 String[] emptyParams = new String[0];
                 Map<String, String[]> settings = new TreeMap<>();
                 settings.put("badStarts", new String[]{"*", "+"});
-                settings.put("strip", emptyParams);
+                if (strip) {
+                    settings.put("strip", emptyParams);
+                }
                 settings.put("fixCase", emptyParams);
                 Linearizer.processRepo(list.get(0), list.get(1), list.get(2), settings);
             } catch(CmdLineException e){
