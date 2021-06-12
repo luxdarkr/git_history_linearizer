@@ -139,11 +139,23 @@ public class Linearizer {
         tree.nodes.put(commit, tree.head);
 
         RepoNode prevNode = null;
+        Queue<RevCommit> walkQue = new LinkedList<>();
         while (commit != startCommit && commit != null) {
             walk.parseCommit(commit.getId());
             if (commit.getParents() != null) {
                 int parentCount = commit.getParentCount();
                 if (parentCount == 1) {
+                    RepoNode repoNode = new RepoNode();
+                    if (prevNode != null) {
+                        repoNode.childs.add(prevNode);
+                    }
+                    repoNode.commit = commit;
+                    tree.nodes.put(commit, repoNode);
+
+                    commit = commit.getParent(0);
+                    prevNode = repoNode;
+                } else if (parentCount == 2) {
+                    walkQue.add(commit.getParent(1));
                     RepoNode repoNode = new RepoNode();
                     if (prevNode != null) {
                         repoNode.childs.add(prevNode);
@@ -181,11 +193,19 @@ public class Linearizer {
         RepoNode node = tree.nodes.get(startCommit);
         while (node != null) {
             RevCommit cpCommit = node.commit;
+            System.out.println(cpCommit.getFullMessage());
             String newMessage = fixString(cpCommit.getFullMessage().toString(), settings);
             if (newMessage != null) {
-                git.cherryPick()
-                        .include(cpCommit)
-                        .call();
+                if (cpCommit.getParents().length == 0) {
+                    git.cherryPick()
+                            .include(cpCommit)
+                            .call();
+                } else {
+                    git.cherryPick()
+                            .include(cpCommit)
+                            .setMainlineParentNumber(1) // parent index starts from 1 here
+                            .call();
+                }
                 git.commit()
                         .setAmend(true)
                         .setMessage(newMessage)
