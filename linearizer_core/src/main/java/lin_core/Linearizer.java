@@ -55,6 +55,22 @@ public class Linearizer {
     public static class RepoTree {
         public RepoNode head;
         public Map<RevCommit, RepoNode> nodes = new HashMap<>();
+
+        public void sout() {
+            for (Map.Entry<RevCommit, RepoNode> entry : nodes.entrySet()) {
+                System.out.println("");
+                System.out.print(entry.getKey());
+                System.out.print(entry.getValue().commit.getFullMessage());
+                System.out.println("childs");
+                for (RepoNode elem : entry.getValue().childs) {
+                    System.out.print(elem.commit.getFullMessage());
+                }
+                System.out.println("parents");
+                for (RepoNode elem : entry.getValue().parents) {
+                    System.out.print(elem.commit.getFullMessage());
+                }
+            }
+        }
     }
 
     public static Repository openRepo(String path) throws Exception {
@@ -106,6 +122,7 @@ public class Linearizer {
         Git git = new Git(repo);
         RepoTree tree = buildTree(walk, head, startCommit);
         createAndSwitchBranch(git, startCommit);
+        tree.sout();
         linearize(tree, git, startCommit, settings);
 
         walk.dispose();
@@ -140,8 +157,9 @@ public class Linearizer {
 
         RepoNode prevNode = null;
         Queue<RevCommit> walkQue = new LinkedList<>();
-        while (commit != startCommit && commit != null) {
+        while (commit != null) {
             walk.parseCommit(commit.getId());
+            boolean noParents = false;
             if (commit.getParents() != null) {
                 int parentCount = commit.getParentCount();
                 if (parentCount == 1) {
@@ -156,6 +174,7 @@ public class Linearizer {
                     prevNode = repoNode;
                 } else if (parentCount == 2) {
                     walkQue.add(commit.getParent(1));
+                    // TODO fix DRY
                     RepoNode repoNode = new RepoNode();
                     if (prevNode != null) {
                         repoNode.childs.add(prevNode);
@@ -166,10 +185,17 @@ public class Linearizer {
                     commit = commit.getParent(0);
                     prevNode = repoNode;
                 } else {
-                    commit = null;
+                    noParents = true;
                 }
             } else {
-                commit = null;
+                noParents = true;
+            }
+            if (noParents || commit == startCommit) {
+                if (walkQue.size() > 0) {
+                    commit = walkQue.remove();
+                } else {
+                    commit = null;
+                }
             }
         }
         if (commit == startCommit) {
@@ -193,8 +219,8 @@ public class Linearizer {
         RepoNode node = tree.nodes.get(startCommit);
         while (node != null) {
             RevCommit cpCommit = node.commit;
-            System.out.println(cpCommit.getFullMessage());
-            String newMessage = fixString(cpCommit.getFullMessage().toString(), settings);
+            System.out.print(cpCommit.getFullMessage());
+            String newMessage = fixString(cpCommit.getFullMessage(), settings);
             if (newMessage != null) {
                 if (cpCommit.getParents().length == 0) {
                     git.cherryPick()
