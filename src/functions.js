@@ -9,21 +9,53 @@ module.exports = {
 }
 
 function helpFunc() {
-    vscode.window.showInformationMessage('Help is already on its way.');
+    const { exec } = require("child_process");
+
+exec("Linearizer -h", (error, stdout, stderr) => {
+    if (error) {
+        vscode.window.showInformationMessage(`error: ${error.message}`);
+        return;
+    }
+    if (stderr) {
+        vscode.window.showInformationMessage(`${stderr}`);
+        return;
+    }
+    vscode.window.showInformationMessage(`${stdout}`);
+});
 };
 function linFunc(rep, start, branch) {
+    const { exec } = require("child_process");
     if (rep == '' || start == '' || branch == '')
         vscode.window.showInformationMessage('Fix your lines')
     else
-        vscode.window.showInformationMessage(' Repository: ' + rep +
-            ' Start: ' + start +
-            ' Branch: ' + branch);
+    exec("Linearizer -l " + rep + branch + start, (error, stdout, stderr) => {
+        if (error) {
+            vscode.window.showInformationMessage(`error: ${error.message}`);
+            return;
+        }
+        if (stderr) {
+            vscode.window.showInformationMessage(`${stderr}`);
+            return;
+        }
+        vscode.window.showInformationMessage(`${stdout}`);
+    });
 };
 function fixFunc(rep, start, branch) {
+    const { exec } = require("child_process");
     if (rep == '' || start == '' || branch == '')
         vscode.window.showInformationMessage('Fix your lines')
     else
-        vscode.window.showInformationMessage('Your stuff was fixed');
+    exec("Linearizer -l " + rep + branch + start + "-f", (error, stdout, stderr) => {
+        if (error) {
+            vscode.window.showInformationMessage(`error: ${error.message}`);
+            return;
+        }
+        if (stderr) {
+            vscode.window.showInformationMessage(`${stderr}`);
+            return;
+        }
+        vscode.window.showInformationMessage(`${stdout}`);
+    });
 };
 function hello() {
     vscode.window.showInformationMessage('Hello!');
@@ -47,7 +79,7 @@ function help() {
 
 function linearize(rep, start, branch) {
     const { exec } = require("child_process");
-    exec("Linearizer -l", (error, stdout, stderr) => {
+    exec("Linearizer -l" + rep + branch + start, (error, stdout, stderr) => {
         if (error) {
             vscode.window.showInformationMessage(`error: ${error.message}`);
             return;
