@@ -8,7 +8,19 @@ module.exports = {
 }
 
 function helpFunc() {
-    vscode.window.showInformationMessage('Help is already on its way.');
+    const { exec } = require("child_process");
+
+exec("Linearizer -h", (error, stdout, stderr) => {
+    if (error) {
+        vscode.window.showInformationMessage(`error: ${error.message}`);
+        return;
+    }
+    if (stderr) {
+        vscode.window.showInformationMessage(`${stderr}`);
+        return;
+    }
+    vscode.window.showInformationMessage(`${stdout}`);
+});
 };
 function linFunc(rep, start, branch, strip, fix_case, remove, fix_messages) {
     if (rep == '' || start == '' || branch == '')
@@ -49,7 +61,7 @@ function help() {
 
 function linearize(rep, start, branch) {
     const { exec } = require("child_process");
-    exec("Linearizer -l", (error, stdout, stderr) => {
+    exec("Linearizer -l" + rep + branch + start, (error, stdout, stderr) => {
         if (error) {
             vscode.window.showInformationMessage(`error: ${error.message}`);
             return;
