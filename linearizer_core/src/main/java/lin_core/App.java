@@ -18,6 +18,6 @@ public class App {
         settings.put("badStarts", new String[] {"*", "+"});
         settings.put("strip", emptyParams);
         settings.put("fixCase", emptyParams);
-        Linearizer.processRepo(newRepoPath, "refs/heads/master", "4c5568af4b07a41aa22f0fac200ed9af6b5e09ad", settings);
+        Linearizer.processRepo(newRepoPath, "refs/heads/master", "eb3884537613d77d41e0f7575bedbcb00e19a6fc", settings);
     }
 }

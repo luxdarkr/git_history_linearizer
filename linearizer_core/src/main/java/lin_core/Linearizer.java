@@ -15,12 +15,6 @@ import java.io.IOException;
 import java.util.*;
 
 public class Linearizer {
-    public static class RepoNode {
-        public List<RepoNode> parents = new LinkedList<>();
-        public List<RepoNode> childs = new LinkedList<>();
-        RevCommit commit;
-    }
-
     public static class Settings {
         public boolean strip = false;
         public boolean fixCase = false;
@@ -50,27 +44,6 @@ public class Linearizer {
             result.fixCase = true;
         }
         return result;
-    }
-
-    public static class RepoTree {
-        public RepoNode head;
-        public Map<RevCommit, RepoNode> nodes = new HashMap<>();
-
-        public void sout() {
-            for (Map.Entry<RevCommit, RepoNode> entry : nodes.entrySet()) {
-                System.out.println("");
-                System.out.print(entry.getKey());
-                System.out.print(entry.getValue().commit.getFullMessage());
-                System.out.println("childs");
-                for (RepoNode elem : entry.getValue().childs) {
-                    System.out.print(elem.commit.getFullMessage());
-                }
-                System.out.println("parents");
-                for (RepoNode elem : entry.getValue().parents) {
-                    System.out.print(elem.commit.getFullMessage());
-                }
-            }
-        }
     }
 
     public static Repository openRepo(String path) throws Exception {
@@ -120,10 +93,29 @@ public class Linearizer {
         }
 
         Git git = new Git(repo);
-        RepoTree tree = buildTree(walk, head, startCommit);
         createAndSwitchBranch(git, startCommit);
-        tree.sout();
-        linearize(tree, git, startCommit, settings);
+        RevCommit commit = walk.parseCommit(head.getObjectId());
+        List<RevCommit> orderedCommits = getOrder(walk, commit, startCommit);
+        Collections.reverse(orderedCommits);
+        for (RevCommit curCommit : orderedCommits) {
+            String newMessage = fixString(curCommit.getFullMessage(), settings);
+            if (newMessage != null) {
+                if (curCommit.getParents().length == 0) {
+                    git.cherryPick()
+                            .include(curCommit)
+                            .call();
+                } else {
+                    git.cherryPick()
+                            .include(curCommit)
+                            .setMainlineParentNumber(1) // parent index starts from 1 here
+                            .call();
+                }
+                git.commit()
+                        .setAmend(true)
+                        .setMessage(newMessage)
+                        .call();
+            }
+        }
 
         walk.dispose();
         git.close();
@@ -135,11 +127,11 @@ public class Linearizer {
         if (settings.badStarts != null) {
             result = removeBadStarts(result, settings.badStarts);
         }
-        if (settings.fixCase) {
-            result = fixCase(result);
-        }
         if (settings.strip) {
             result = strip(result);
+        }
+        if (settings.fixCase) {
+            result = fixCase(result);
         }
         return result;
     }
@@ -148,42 +140,44 @@ public class Linearizer {
         return commit.getId().toObjectId().toString().substring(7, 7 + 40);
     }
 
-    private static RepoTree buildTree(RevWalk walk, Ref head, RevCommit startCommit) throws IOException {
-        RepoTree tree = new RepoTree();
-        RevCommit commit = walk.parseCommit(head.getObjectId());
-        tree.head = new RepoNode();
-        tree.head.commit = commit;
-        tree.nodes.put(commit, tree.head);
-
-        RepoNode prevNode = null;
-        Queue<RevCommit> walkQue = new LinkedList<>();
+    private static List<RevCommit> getOrder(RevWalk walk, RevCommit commit, RevCommit startCommit) throws Exception {
+        List<RevCommit> orderedCommits = new LinkedList<>();
         while (commit != null) {
             walk.parseCommit(commit.getId());
             boolean noParents = false;
             if (commit.getParents() != null) {
                 int parentCount = commit.getParentCount();
                 if (parentCount == 1) {
-                    RepoNode repoNode = new RepoNode();
-                    if (prevNode != null) {
-                        repoNode.childs.add(prevNode);
-                    }
-                    repoNode.commit = commit;
-                    tree.nodes.put(commit, repoNode);
-
+                    orderedCommits.add(commit);
                     commit = commit.getParent(0);
-                    prevNode = repoNode;
                 } else if (parentCount == 2) {
-                    walkQue.add(commit.getParent(1));
-                    // TODO fix DRY
-                    RepoNode repoNode = new RepoNode();
-                    if (prevNode != null) {
-                        repoNode.childs.add(prevNode);
+                    //orderedCommits.add(commit); // <- merge commits
+                    RevCommit branchCommit = null;
+                    RevCommit leftCommit = commit.getParent(0);
+                    RevCommit rightCommit = commit.getParent(1);
+                    Set<RevCommit> leftSet = new TreeSet<>();
+                    Set<RevCommit> rightSet = new TreeSet<>();
+                    walk.parseCommit(leftCommit.getId());
+                    walk.parseCommit(rightCommit.getId());
+                    while (leftCommit.getParents().length > 0 && rightCommit.getParents().length > 0) {
+                        leftSet.add(leftCommit);
+                        rightSet.add(rightCommit);
+                        if (leftSet.contains(rightCommit)) {
+                            branchCommit = rightCommit;
+                            break;
+                        }
+                        if (rightSet.contains(leftCommit)) {
+                            branchCommit = leftCommit;
+                            break;
+                        }
+                        leftCommit = leftCommit.getParent(0);
+                        rightCommit = rightCommit.getParent(0);
+                        walk.parseCommit(leftCommit.getId());
+                        walk.parseCommit(rightCommit.getId());
                     }
-                    repoNode.commit = commit;
-                    tree.nodes.put(commit, repoNode);
-
-                    commit = commit.getParent(0);
-                    prevNode = repoNode;
+                    orderedCommits.addAll(getOrder(walk, commit.getParent(0), branchCommit));
+                    orderedCommits.addAll(getOrder(walk, commit.getParent(1), branchCommit));
+                    commit = branchCommit;
                 } else {
                     noParents = true;
                 }
@@ -191,60 +185,14 @@ public class Linearizer {
                 noParents = true;
             }
             if (commit == startCommit) {
-                RepoNode repoNode = new RepoNode();
-                if (prevNode != null) {
-                    repoNode.childs.add(prevNode);
-                }
-                repoNode.commit = commit;
-                tree.nodes.put(commit, repoNode);
-                break;
+                //orderedCommits.add(commit);
+                noParents = true;
             }
             if (noParents) {
-                if (walkQue.size() > 0) {
-                    commit = walkQue.remove();
-                } else {
-                    commit = null;
-                }
-            }
-        }
-
-        return tree;
-    }
-
-    private static CommitPair linearize(RepoTree tree, Git git, RevCommit startCommit, Settings settings) throws Exception {
-        if (tree == null || git == null || startCommit == null || settings == null) {
-            throw new NullPointerException();
-        }
-        // TODO check branch name
-        // TODO implement
-
-        RepoNode node = tree.nodes.get(startCommit);
-        while (node != null) {
-            RevCommit cpCommit = node.commit;
-            System.out.print(cpCommit.getFullMessage());
-            String newMessage = fixString(cpCommit.getFullMessage(), settings);
-            if (newMessage != null) {
-                if (cpCommit.getParents().length == 0) {
-                    git.cherryPick()
-                            .include(cpCommit)
-                            .call();
-                } else {
-                    git.cherryPick()
-                            .include(cpCommit)
-                            .setMainlineParentNumber(1) // parent index starts from 1 here
-                            .call();
-                }
-                git.commit()
-                        .setAmend(true)
-                        .setMessage(newMessage)
-                        .call();
-            }
-            if (node.childs.isEmpty()) {
                 break;
             }
-            node = node.childs.get(0);
         }
-        return new CommitPair(startCommit, startCommit);
+        return orderedCommits;
     }
 
     /*
