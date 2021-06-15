@@ -190,7 +190,16 @@ public class Linearizer {
             } else {
                 noParents = true;
             }
-            if (noParents || commit == startCommit) {
+            if (commit == startCommit) {
+                RepoNode repoNode = new RepoNode();
+                if (prevNode != null) {
+                    repoNode.childs.add(prevNode);
+                }
+                repoNode.commit = commit;
+                tree.nodes.put(commit, repoNode);
+                break;
+            }
+            if (noParents) {
                 if (walkQue.size() > 0) {
                     commit = walkQue.remove();
                 } else {
@@ -198,14 +207,7 @@ public class Linearizer {
                 }
             }
         }
-        if (commit == startCommit) {
-            RepoNode repoNode = new RepoNode();
-            if (prevNode != null) {
-                repoNode.childs.add(prevNode);
-            }
-            repoNode.commit = commit;
-            tree.nodes.put(commit, repoNode);
-        }
+
         return tree;
     }
 
