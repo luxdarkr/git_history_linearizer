@@ -30,20 +30,12 @@
       </vspacer>
       <component id="dfee9" class="javax.swing.JButton" binding="hideToolWindowButton">
         <constraints>
-          <grid row="12" column="3" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false">
+          <grid row="12" column="0" row-span="1" col-span="5" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false">
             <preferred-size width="235" height="38"/>
           </grid>
         </constraints>
         <properties>
           <text value="Hide"/>
-        </properties>
-      </component>
-      <component id="e98e5" class="javax.swing.JLabel" binding="bottomLabel">
-        <constraints>
-          <grid row="12" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
-        </constraints>
-        <properties>
-          <text value="Datetime just for fun"/>
         </properties>
       </component>
       <component id="aed1b" class="javax.swing.JCheckBox" binding="stripCommitMessagesCheckBox" default-binding="true">
@@ -68,7 +60,7 @@
           <text value="Fix case"/>
         </properties>
       </component>
-      <component id="707a5" class="javax.swing.JCheckBox" binding="removeExtraSymbolCheckBox" default-binding="true">
+      <component id="707a5" class="javax.swing.JCheckBox" binding="fixBadStartsCheckBox" default-binding="true">
         <constraints>
           <grid row="9" column="3" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="8" fill="0" indent="0" use-parent-layout="false">
             <preferred-size width="235" height="31"/>
@@ -76,7 +68,7 @@
         </constraints>
         <properties>
           <selected value="true"/>
-          <text value="Remove extra symbol"/>
+          <text value="Fix bad starts"/>
         </properties>
       </component>
       <component id="744dd" class="javax.swing.JCheckBox" binding="fixBigMessagesCheckBox" default-binding="true">
@@ -86,21 +78,14 @@
           </grid>
         </constraints>
         <properties>
-          <selected value="true"/>
+          <enabled value="false"/>
+          <selected value="false"/>
           <text value="Fix big messages"/>
         </properties>
       </component>
       <component id="dfd8b" class="javax.swing.JTextField" binding="startCommitTextField">
         <constraints>
           <grid row="4" column="0" row-span="1" col-span="5" vsize-policy="0" hsize-policy="6" anchor="8" fill="1" indent="0" use-parent-layout="false">
-            <preferred-size width="150" height="-1"/>
-          </grid>
-        </constraints>
-        <properties/>
-      </component>
-      <component id="83500" class="javax.swing.JTextField" binding="endCommitTextField">
-        <constraints>
-          <grid row="6" column="0" row-span="1" col-span="5" vsize-policy="0" hsize-policy="6" anchor="8" fill="1" indent="0" use-parent-layout="false">
             <preferred-size width="150" height="-1"/>
           </grid>
         </constraints>
@@ -119,7 +104,7 @@
           <grid row="5" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
         </constraints>
         <properties>
-          <text value="End"/>
+          <text value="Branch name"/>
         </properties>
       </component>
       <component id="cfce8" class="javax.swing.JLabel">
@@ -140,10 +125,32 @@
       </component>
       <component id="83915" class="javax.swing.JButton" binding="openRepoButton">
         <constraints>
-          <grid row="2" column="4" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+          <grid row="2" column="4" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="1" fill="0" indent="0" use-parent-layout="false"/>
         </constraints>
         <properties>
           <text value=". . ."/>
+        </properties>
+      </component>
+      <component id="83500" class="javax.swing.JTextField" binding="refIDTextField">
+        <constraints>
+          <grid row="6" column="0" row-span="1" col-span="5" vsize-policy="0" hsize-policy="6" anchor="8" fill="1" indent="0" use-parent-layout="false">
+            <preferred-size width="150" height="-1"/>
+          </grid>
+        </constraints>
+        <properties>
+          <text value="refs/heads/master"/>
+          <toolTipText value=""/>
+        </properties>
+      </component>
+      <component id="9f0c8" class="javax.swing.JTextField" binding="badStartsTextField">
+        <constraints>
+          <grid row="9" column="4" row-span="1" col-span="1" vsize-policy="0" hsize-policy="6" anchor="8" fill="1" indent="0" use-parent-layout="false">
+            <preferred-size width="150" height="-1"/>
+          </grid>
+        </constraints>
+        <properties>
+          <text value="*,+"/>
+          <toolTipText value="bad start samples separated by comma"/>
         </properties>
       </component>
     </children>

@@ -1,4 +1,5 @@
-/.directory
+.directory
+*/.directory
 /gradle/
 .gradle
 .idea

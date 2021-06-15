@@ -29,4 +29,15 @@
                 factoryClass="lin_idea.LinearizerToolWindowFactory"/>
   </extensions>
 
+  <actions>
+    <group id="Vcs.log.Toolbar" text="Git history linearizer" icon="AllIcons.Vcs.Vendors.Github">
+      <add-to-group group-id="Vcs.Log.ContextMenu"/>
+      <action class="lin_idea.LinAction" id="lin_idea.action.VCS"
+              text="Linearize from here"
+              description="Linearize commit history from here to the HEAD">
+      </action>
+      <separator/>
+    </group>
+  </actions>
+
 </idea-plugin>
