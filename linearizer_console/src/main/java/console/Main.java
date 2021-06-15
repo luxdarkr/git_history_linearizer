@@ -22,8 +22,8 @@ public class Main {
             aliases = "--help",
             forbids ={"-l"},
             usage = "Shows help screen."
-            )
-    private boolean help;
+    )
+    private boolean help = false;
 
     @Option(
             name = "-l",
@@ -31,8 +31,40 @@ public class Main {
             handler = StringArrayOptionHandler.class,
             forbids = {"-h"},
             usage = "Performs linearization between first and last commits, then puts it in a new fork."
-            )
+    )
     private List<String> list;
+
+    @Option(
+            name = "-s",
+            depends={"-l"},
+            aliases = "--strip",
+            usage = "Strips commit messages after linearize"
+    )
+    private boolean strip = false;
+
+    @Option(
+            name = "-f",
+            depends={"-l"},
+            aliases = "--fixcase",
+            usage = "Fixes cases in commit messages after linearize"
+    )
+    private boolean fixcase = false;
+
+    @Option(
+            name = "-r",
+            depends={"-l"},
+            aliases = "--badstarts",
+            usage = "Removes stars and pluses in commit messages after linearize"
+    )
+    private boolean badstarts = false;
+
+    @Option(
+            name = "-b",
+            depends={"-l"},
+            aliases = "--fixbig",
+            usage = "Fixes big commit messages after linearize"
+    )
+    private boolean fixbig = false;
 
     @Argument
     private List<String> args = new ArrayList<String>();
@@ -65,16 +97,26 @@ public class Main {
 
         if(list != null){
             try {
-                if (list.size() != 4) {
+                if (list.size() < 3) {
                     System.err.println("Incorrect input. See the example");
-                    System.err.println("Linearizer -l <repo_path> <branch> <start_commit> <settings>");
+                    System.err.println("Linearizer -l <repo_path> <branch> <start_commit> [-r] [-s] [-f]");
                     System.exit(-1);
                 }
                 String[] emptyParams = new String[0];
                 Map<String, String[]> settings = new TreeMap<>();
-                settings.put("badStarts", new String[]{"*", "+"});
-                settings.put("strip", emptyParams);
-                settings.put("fixCase", emptyParams);
+
+                if (badstarts){
+                    settings.put("badStarts", new String[]{"*", "+"});
+                }
+
+                if (strip) {
+                    settings.put("strip", emptyParams);
+                }
+
+                if (fixcase){
+                    settings.put("fixCase", emptyParams);
+                }
+
                 Linearizer.processRepo(list.get(0), list.get(1), list.get(2), settings);
             } catch(CmdLineException e){
                 System.err.println(e.getMessage());
