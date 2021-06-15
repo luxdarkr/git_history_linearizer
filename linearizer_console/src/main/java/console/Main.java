@@ -98,9 +98,9 @@ public class Main {
         if(list != null){
             try {
                 if (list.size() < 3) {
-                    System.err.println("Incorrect input. See the example");
-                    System.err.println("Linearizer -l <repo_path> <branch> <start_commit> [-r] [-s] [-f]");
-                    System.exit(-1);
+                   // System.err.println("Incorrect input. See the example");
+                  //  System.err.println("Linearizer -l <repo_path> <branch> <start_commit> [-r] [-s] [-f]");
+                   // System.exit(-1);
                 }
                 String[] emptyParams = new String[0];
                 Map<String, String[]> settings = new TreeMap<>();
@@ -117,7 +117,8 @@ public class Main {
                     settings.put("fixCase", emptyParams);
                 }
 
-                Linearizer.processRepo(list.get(0), list.get(1), list.get(2), settings);
+                Linearizer.processRepo("D:\\git_linearizer\\tests\\git_test_simple\\.git", "refs/heads/master", "e40fc2fbea20214634e22445d2339e59b5067017", settings  );
+                //Linearizer.processRepo(list.get(0), list.get(1), list.get(2), settings);
             } catch(CmdLineException e){
                 System.err.println(e.getMessage());
             }
