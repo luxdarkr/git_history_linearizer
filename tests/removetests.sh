@@ -1,0 +1,1 @@
+rm -rf git_test_simple
