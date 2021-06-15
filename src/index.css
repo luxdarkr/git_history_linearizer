@@ -55,17 +55,17 @@ body {
 }
 
 .func:not(.active) {
-    background: #CD6326;
+    background: #2631cd;
     color: #F7F7F7;
 }
 
 .func:hover {
     /* Цвет фона под ссылкой */
-    background: #E39128;
+    background: #28cde3;
     color: #F7F7F7;
 }
 
 .func:active {
-    background: #8F5613;
+    background: #26138f;
     color: #F7F7F7;
 }

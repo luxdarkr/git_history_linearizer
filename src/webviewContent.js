@@ -52,6 +52,19 @@ function getWebviewContent() {
             flex-direction: wrap;
             align-items: center;
           }
+
+          .checks {
+            margin-top: 3vh;
+            display: flex;
+            flex-direction: column;
+          }
+          .check{
+            align: left;
+            font-family: Roboto;
+            font-style: normal;
+            font-weight: normal;
+            font-size: 2vh;
+          }
       
           .func {
             border-radius: 5px;
@@ -69,18 +82,18 @@ function getWebviewContent() {
           }
       
           .func:not(.active) {
-            background: #CD6326;
+            background: #2631cd;
             color: #F7F7F7;
           }
       
           .func:hover {
             /* Цвет фона под ссылкой */
-            background: #E39128;
+            background: #28cde3;
             color: #F7F7F7;
           }
       
           .func:active {
-            background: #8F5613;
+            background: #26138f;
             color: #F7F7F7;
           }
         </style>
@@ -93,12 +106,15 @@ function getWebviewContent() {
                 <input class="inp" type="text" placeholder="Branch" id="branch">
                 <input class="inp" type="text" placeholder="Start" id="start">
             </form>
+            <form class="checks">
+                <label class="check"><input type="checkbox"  id="strip"> Strip commit messages</label>
+                <label class="check"><input type="checkbox" id="fix_case"> Fix case</label>
+                <label class="check"><input type="checkbox" id="remove"> Remove extra symbols</label>
+                <label class="check"><input type="checkbox" id="fix_messages"> Fix big messages</label>
+            </form>
             <div class="buttons">
                 <button class="func" id="button_linearize">
                     Linearize
-                </button>
-                <button class="func" id="button_fix">
-                    Fix
                 </button>
                 <button class="func" id="button_help">
                     Help
@@ -109,11 +125,9 @@ function getWebviewContent() {
           const vscode = acquireVsCodeApi();
           const buttonHelp = document.getElementById('button_help');
           const buttonLinearize = document.getElementById('button_linearize');
-          const buttonFix = document.getElementById('button_fix');
 
           buttonHelp.addEventListener('click', helpFunc);
           buttonLinearize.addEventListener('click', linFunc);
-          buttonFix.addEventListener('click', fixFunc);
           
           function helpFunc() {
             vscode.postMessage({
@@ -126,16 +140,11 @@ function getWebviewContent() {
               command: 'linearize',
               rep: document.getElementById('rep').value,
               start: document.getElementById('start').value,
-              branch: document.getElementById('branch').value
-            }
-            )
-          };
-          function fixFunc() {
-            vscode.postMessage({
-              command: 'fix',
-              rep: document.getElementById('rep').value,
-              start: document.getElementById('start').value,
-              branch: document.getElementById('branch').value
+              branch: document.getElementById('branch').value,
+              strip: document.getElementById('strip').checked,
+              fix_case: document.getElementById('fix_case').checked,
+              remove: document.getElementById('remove').checked,
+              fix_messages: document.getElementById('fix_messages').checked
             }
             )
           };

@@ -2,7 +2,6 @@ const vscode = require('vscode');
 module.exports = {
     helpFunc,
     linFunc,
-    fixFunc,
     hello,
     help,
     linearize
@@ -11,19 +10,22 @@ module.exports = {
 function helpFunc() {
     vscode.window.showInformationMessage('Help is already on its way.');
 };
-function linFunc(rep, start, branch) {
+function linFunc(rep, start, branch, strip, fix_case, remove, fix_messages) {
     if (rep == '' || start == '' || branch == '')
         vscode.window.showInformationMessage('Fix your lines')
-    else
+    else {
         vscode.window.showInformationMessage(' Repository: ' + rep +
             ' Start: ' + start +
             ' Branch: ' + branch);
-};
-function fixFunc(rep, start, branch) {
-    if (rep == '' || start == '' || branch == '')
-        vscode.window.showInformationMessage('Fix your lines')
-    else
-        vscode.window.showInformationMessage('Your stuff was fixed');
+        if (strip == true)
+            vscode.window.showInformationMessage('strip is on')
+        if (fix_case == true)
+            vscode.window.showInformationMessage('fix_case is on')
+        if (remove == true)
+            vscode.window.showInformationMessage('remove is on')
+        if (fix_messages == true)
+            vscode.window.showInformationMessage('fix_messages is on')
+    }
 };
 function hello() {
     vscode.window.showInformationMessage('Hello!');
