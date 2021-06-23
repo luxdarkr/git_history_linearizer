@@ -39,8 +39,18 @@ jar {
     archivesBaseName = 'Linearizer'
     archiveVersion = ''
     manifest {
-        attributes 'Main-Class': 'console.Main'
+        attributes(
+                'Class-Path': configurations.compile.collect { it.getName() }.join(' '),
+                'Main-Class': 'console.Main'
+        )
     }
-    from configurations.runtime.collect { zipTree(it) }
-    destinationDirectory.set(file("$buildDir/linearizer_console"))
+    from ({
+        configurations.compile.collect { it.isDirectory() ? it : zipTree(it) }
+        configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
+    }) {
+        exclude 'META-INF/MANIFEST.MF'
+        exclude 'META-INF/*.SF'
+        exclude 'META-INF/*.DSA'
+        exclude 'META-INF/*.RSA'
+    }
 }
