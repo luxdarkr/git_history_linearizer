@@ -16,8 +16,8 @@ buildSearchableOptions {
 
 patchPluginXml {
   version = project.version
-  sinceBuild = '202'
-  untilBuild = '212.*'
+  sinceBuild = '183'
+  untilBuild = '211'
 }
 
 repositories {
@@ -28,7 +28,7 @@ dependencies {
   testCompile group: 'junit', name: 'junit', version: '4.12'
 
   // This dependency is used by the application.
-  implementation 'com.google.guava:guava:29.0-jre'
+  // implementation 'com.google.guava:guava:29.0-jre'
 
   // JGit
   implementation 'org.eclipse.jgit:org.eclipse.jgit:5.10.0.202012080955-r'
@@ -44,5 +44,5 @@ dependencies {
 }
 
 intellij {
-  version = "LATEST-EAP-SNAPSHOT"
+  version = "2020.2"
 }

@@ -1,5 +1,6 @@
 package lin_idea;
 
+import com.intellij.openapi.options.Configurable;
 import com.intellij.openapi.progress.ProgressManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vcs.AbstractVcs;
@@ -24,6 +25,11 @@ public final class LinVcs extends AbstractVcs {
     @Override
     public @Nls @NotNull String getDisplayName() {
         return "Git"; //DISPLAY_NAME.get();
+    }
+
+    @Override
+    public Configurable getConfigurable() {
+        return null;
     }
 
     @NotNull

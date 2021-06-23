@@ -23,6 +23,7 @@ public final class LinRepositoryManager extends AbstractRepositoryManager<LinRep
 
     @NotNull
     public static LinRepositoryManager getInstance(@NotNull Project project) {
+        //return new LinRepositoryManager(project);
         return project.getService(LinRepositoryManager.class);
     }
 }
