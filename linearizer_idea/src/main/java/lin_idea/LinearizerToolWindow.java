@@ -6,6 +6,7 @@ import com.intellij.openapi.fileChooser.PathChooserDialog;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.project.ProjectManager;
 import com.intellij.openapi.roots.ProjectRootManager;
+import com.intellij.openapi.util.IconLoader;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.openapi.wm.ToolWindow;
 import org.eclipse.jgit.lib.Repository;
@@ -43,6 +44,8 @@ public class LinearizerToolWindow {
     private JButton repoRefreshButton;
     private JButton refIDRefreshButton;
 
+    private Icon refreshIcon = IconLoader.getIcon("/icons/application/refresh.png");
+
     //private Linearizer linearizerInstance;
 
     public LinearizerToolWindow(ToolWindow toolWindow) {
@@ -51,7 +54,11 @@ public class LinearizerToolWindow {
         openRepoButton.addActionListener(e -> onOpenRepoButton());
         repoRefreshButton.addActionListener(e -> onRepoRefreshButton());
         refIDRefreshButton.addActionListener(e -> onRefIDRefreshButton());
+
         statusLabel.setText("");
+        repoRefreshButton.setIcon(refreshIcon);
+        refIDRefreshButton.setIcon(refreshIcon);
+
         onRepoRefreshButton();
         onRefIDRefreshButton();
     }
