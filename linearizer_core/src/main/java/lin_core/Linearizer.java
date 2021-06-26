@@ -13,6 +13,7 @@ import org.eclipse.jgit.storage.file.FileRepositoryBuilder;
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class Linearizer {
     public static class Settings {
@@ -93,9 +94,12 @@ public class Linearizer {
         }
 
         Git git = new Git(repo);
-        createAndSwitchBranch(git, startCommit);
+        git.checkout()
+                .setName(refName)
+                .call();
         RevCommit commit = walk.parseCommit(head.getObjectId());
-        List<RevCommit> orderedCommits = getOrder(walk, commit, startCommit);
+        List<RevCommit> orderedCommits = getOrder(walk, commit, startCommit, git);
+        createAndSwitchBranch(git, startCommit);
         Collections.reverse(orderedCommits);
         for (RevCommit curCommit : orderedCommits) {
             String newMessage = fixString(curCommit.getFullMessage(), settings);
@@ -140,56 +144,61 @@ public class Linearizer {
         return commit.getId().toObjectId().toString().substring(7, 7 + 40);
     }
 
-    private static List<RevCommit> getOrder(RevWalk walk, RevCommit commit, RevCommit startCommit) throws Exception {
-        List<RevCommit> orderedCommits = new LinkedList<>();
-        while (commit != null) {
-            walk.parseCommit(commit.getId());
-            boolean noParents = false;
-            if (commit.getParents() != null) {
-                int parentCount = commit.getParentCount();
-                if (parentCount == 1) {
-                    orderedCommits.add(commit);
-                    commit = commit.getParent(0);
-                } else if (parentCount == 2) {
-                    //orderedCommits.add(commit); // <- merge commits
-                    RevCommit branchCommit = null;
-                    RevCommit leftCommit = commit.getParent(0);
-                    RevCommit rightCommit = commit.getParent(1);
-                    Set<RevCommit> leftSet = new TreeSet<>();
-                    Set<RevCommit> rightSet = new TreeSet<>();
-                    walk.parseCommit(leftCommit.getId());
-                    walk.parseCommit(rightCommit.getId());
-                    while (leftCommit.getParents().length > 0 && rightCommit.getParents().length > 0) {
-                        leftSet.add(leftCommit);
-                        rightSet.add(rightCommit);
-                        if (leftSet.contains(rightCommit)) {
-                            branchCommit = rightCommit;
-                            break;
-                        }
-                        if (rightSet.contains(leftCommit)) {
-                            branchCommit = leftCommit;
-                            break;
-                        }
-                        leftCommit = leftCommit.getParent(0);
-                        rightCommit = rightCommit.getParent(0);
-                        walk.parseCommit(leftCommit.getId());
-                        walk.parseCommit(rightCommit.getId());
-                    }
-                    orderedCommits.addAll(getOrder(walk, commit.getParent(0), branchCommit));
-                    orderedCommits.addAll(getOrder(walk, commit.getParent(1), branchCommit));
-                    commit = branchCommit;
-                } else {
-                    noParents = true;
+    private static List<RevCommit> getOrder(RevWalk walk, RevCommit headCommit, RevCommit startCommit, Git git) throws Exception {
+        Map<RevCommit, AtomicInteger> childrenCounts = new TreeMap<>();
+        Iterable<RevCommit> commits = git.log().call();
+        for (RevCommit commit : commits) {
+            walk.parseCommit(commit);
+            for (RevCommit parent : commit.getParents()) {
+                if (!childrenCounts.containsKey(parent)) {
+                    childrenCounts.put(parent, new AtomicInteger(0));
                 }
-            } else {
-                noParents = true;
+                childrenCounts.get(parent).incrementAndGet();
             }
-            if (commit == startCommit) {
-                //orderedCommits.add(commit);
-                noParents = true;
+        }
+        List<RevCommit> orderedCommits = new LinkedList<>();
+        Stack<RevCommit> branchStack = new Stack<>();
+        RevCommit commit = headCommit;
+        while (commit != null && commit != startCommit) {
+            walk.parseCommit(commit);
+            int parentsCount = commit.getParentCount();
+            int childrenCount = childrenCounts.getOrDefault(commit, new AtomicInteger(0)).intValue();
+            if (parentsCount == 1 && childrenCount <= 1) { // simple
+                orderedCommits.add(commit);
+                commit = commit.getParent(0);
+                continue;
             }
-            if (noParents) {
-                break;
+            if (parentsCount == 2 && childrenCount <= 1) { // merge commit without branching
+                branchStack.add(commit);
+                commit = commit.getParent(0);
+                continue;
+            }
+            if (parentsCount <= 1 && childrenCount >= 2) { // branch start from simple commit
+                childrenCounts.get(commit).decrementAndGet();
+                if (branchStack.empty()) {
+                    orderedCommits.add(commit);
+                    if (parentsCount == 1) {
+                        commit = commit.getParent(0);
+                    } else {
+                        commit = null;
+                    }
+                } else {
+                    commit = branchStack.pop().getParent(1);
+                }
+                continue;
+            }
+            if (parentsCount == 2 && childrenCount >= 2) { // branch start from merge commit
+                childrenCounts.get(commit).decrementAndGet();
+                if (branchStack.empty()) {
+                    branchStack.add(commit);
+                    commit = commit.getParent(0);
+                } else {
+                    commit = branchStack.pop().getParent(1);
+                }
+                continue;
+            }
+            if (parentsCount == 0) {
+                commit = null;
             }
         }
         return orderedCommits;
