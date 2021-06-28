@@ -114,10 +114,15 @@ public class Linearizer {
                             .setMainlineParentNumber(1) // parent index starts from 1 here
                             .call();
                 }
-                git.commit()
-                        .setAmend(true)
-                        .setMessage(newMessage)
-                        .call();
+                newMessage = newMessage.strip();
+                try {
+                    git.commit()
+                            .setAmend(true)
+                            .setMessage(newMessage)
+                            .call();
+                } catch (Exception e) {
+                    System.out.println(e.getMessage());
+                }
             }
         }
 
@@ -174,7 +179,7 @@ public class Linearizer {
                 continue;
             }
             if (parentsCount <= 1 && childrenCount >= 2) { // branch start from simple commit
-                childrenCounts.get(commit).decrementAndGet();
+                //childrenCounts.get(commit).decrementAndGet();
                 if (branchStack.empty()) {
                     orderedCommits.add(commit);
                     if (parentsCount == 1) {
@@ -188,7 +193,7 @@ public class Linearizer {
                 continue;
             }
             if (parentsCount == 2 && childrenCount >= 2) { // branch start from merge commit
-                childrenCounts.get(commit).decrementAndGet();
+                //childrenCounts.get(commit).decrementAndGet();
                 if (branchStack.empty()) {
                     branchStack.add(commit);
                     commit = commit.getParent(0);
