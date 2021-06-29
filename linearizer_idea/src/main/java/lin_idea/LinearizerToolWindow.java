@@ -19,9 +19,11 @@ import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.regex.PatternSyntaxException;
 
 import lin_core.Linearizer;
 import org.eclipse.jgit.storage.file.FileRepositoryBuilder;
@@ -104,6 +106,7 @@ public class LinearizerToolWindow {
         try { repoDir = fixRepoPath(repoPath); }
         catch (NoSuchFileException e) {
             System.out.println(e.getMessage());
+            setRedLabel("Incorrect repository path");
             return;
         }
         repoTextField.setText(repoDir.toString());
@@ -130,17 +133,31 @@ public class LinearizerToolWindow {
         }
         if (fixBadStartsCheckBox.isSelected()) {
             String[] badStarts = badStartsTextField.getText().split(",");
+            ArrayList<String> newBadStarts = new ArrayList<String>();
             for (int i = 0; i < badStarts.length; i++) {
-                badStarts[i] = badStarts[i].trim();
+                if (!badStarts[i].isEmpty()) {
+                    newBadStarts.add(badStarts[i]);
+                }
             }
-            settings.put("badStarts", badStarts);
+            settings.put("badStarts", newBadStarts.toArray(new String[0]));
+        }
+
+        String refID = refIDTextField.getText();
+        if (!refID.matches("^[^\\\\/]+([\\\\/][^\\\\/]+){2}$")) {
+            setRedLabel("Incorrect branch name");
+            return;
+        }
+        String startCommit = startCommitTextField.getText();
+        if (startCommit.isEmpty()) {
+            setRedLabel("Incorrect start commit id");
+            return;
         }
 
         try {
-            Linearizer.processRepo(repo, refIDTextField.getText(), startCommitTextField.getText(), settings);
+            Linearizer.processRepo(repo, refID, startCommit, settings);
         }
         catch(Exception e) {
-            System.out.println("Linearizer failed with exception:" + e.getMessage());
+            System.out.println(e.getMessage());
             setRedLabel("Linearizer failed");
             return;
         }
