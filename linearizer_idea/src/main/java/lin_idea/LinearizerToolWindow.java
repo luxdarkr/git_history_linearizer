@@ -63,6 +63,8 @@ public class LinearizerToolWindow {
 
         onRepoRefreshButton();
         onRefIDRefreshButton();
+
+        StartCommitTextFieldRef.setRef(startCommitTextField);
     }
 
     VirtualFile[] getContentRoots() {

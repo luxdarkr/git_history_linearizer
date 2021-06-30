@@ -35,27 +35,10 @@ public class LinAction extends VcsLogOneCommitPerRepoAction<GitRepository> {
 
     @Override
     protected void actionPerformed(@NotNull final Project project, @NotNull final Map<GitRepository, VcsFullCommitDetails> commits) {
-        System.out.println("Action performed");
         Iterator it = commits.entrySet().iterator();
         VcsFullCommitDetails details = (VcsFullCommitDetails)((Map.Entry)it.next()).getValue();
-        System.out.println(details.getId());
-
-
-    //    GitVcsSettings settings = GitVcsSettings.getInstance(project);
-    //    GitResetMode defaultMode = ObjectUtils.notNull(settings.getResetMode(), GitResetMode.getDefault());
-    //    GitNewResetDialog dialog = new GitNewResetDialog(project, commits, defaultMode);
-    //    if (dialog.showAndGet()) {
-    //      final GitResetMode selectedMode = dialog.getResetMode();
-    //      settings.setResetMode(selectedMode);
-    //      new Task.Backgroundable(project, GitBundle.message("git.reset.process"), true) {
-    //        @Override
-    //        public void run(@NotNull ProgressIndicator indicator) {
-    //          Map<GitRepository, Hash> hashes = commits.keySet().stream().collect(
-    //                                            Collectors.toMap(Function.identity(), repo -> commits.get(repo).getId()));
-    //          new GitResetOperation(project, hashes, selectedMode, indicator).execute();
-    //        }
-    //      }.queue();
-    //    }
-
+        StartCommitTextFieldRef.setText(
+            details.getId().asString()
+        );
     }
 }
