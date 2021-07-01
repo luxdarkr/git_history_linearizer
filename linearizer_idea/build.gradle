@@ -45,4 +45,6 @@ dependencies {
 
 intellij {
   version = "2020.2"
+  //pluginName 'linearizer_idea'
+  plugins = ['Git4Idea']
 }
