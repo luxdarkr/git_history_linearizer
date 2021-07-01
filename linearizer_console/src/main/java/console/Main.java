@@ -16,7 +16,6 @@ import org.kohsuke.args4j.Option;
 import org.kohsuke.args4j.spi.StringArrayOptionHandler;
 
 public class Main {
-
     @Option(
             name = "-h",
             aliases = "--help",
@@ -70,7 +69,6 @@ public class Main {
     private List<String> args = new ArrayList<String>();
 
     public static void main(String[] args) throws Exception {
-
         Main main = new Main();
         main.parseArgs(args);
     }
