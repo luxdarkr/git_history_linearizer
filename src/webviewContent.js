@@ -1,9 +1,9 @@
 module.exports = {
-    getWebviewContent
+  getWebviewContent
 }
 
 function getWebviewContent() {
-    html = `<!DOCTYPE html>
+  html = `<!DOCTYPE html>
       <html lang="en">
       
       <head>
@@ -52,12 +52,15 @@ function getWebviewContent() {
             flex-direction: wrap;
             align-items: center;
           }
-
-          .checks {
-            margin-top: 3vh;
-            display: flex;
-            flex-direction: column;
+          .choice{
+            margin-top: 2vh;
           }
+          .checks {
+            margin-top: 1vh;
+            display: flex;
+            align-items: center;
+          }
+
           .check{
             align: left;
             font-family: Roboto;
@@ -106,12 +109,24 @@ function getWebviewContent() {
                 <input class="inp" type="text" placeholder="Branch" id="branch">
                 <input class="inp" type="text" placeholder="Start" id="start">
             </form>
-            <form class="checks">
-                <label class="check"><input type="checkbox"  id="strip"> Strip commit messages</label>
-                <label class="check"><input type="checkbox" id="fix_case"> Fix case</label>
-                <label class="check"><input type="checkbox" id="remove"> Remove extra symbols</label>
-                <label class="check"><input type="checkbox" id="fix_messages"> Fix big messages</label>
-            </form>
+            <div class="choice">
+              <div class="checks">
+                  <input type="checkbox" id="strip" />
+                  <label class="check"> Strip commit messages</label>
+              </div>
+              <div class="checks">
+                  <input type="checkbox" id="fix_case" />
+                  <label class="check"> Fix case</label>
+              </div>
+              <div class="checks">
+                  <input type="checkbox" id="remove" />
+                  <label class="check"> Remove extra symbols</label>
+              </div>
+              <div class="checks">
+                  <input type="checkbox" id="fix_messages" />
+                  <label class="check"> Fix big messages</label>
+              </div>
+            </div>
             <div class="buttons">
                 <button class="func" id="button_linearize">
                     Linearize
@@ -152,6 +167,6 @@ function getWebviewContent() {
       </body>
       
       </html>`;
-  
-      return html;
-  }
+
+  return html;
+}
