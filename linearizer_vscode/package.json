@@ -1,0 +1,66 @@
+{
+	"name": "linearizer",
+	"description": "Linearizer",
+	"publisher": "linearize-team",
+	"displayName": "Linearizer",
+	"version": "0.0.1",
+	"engines": {
+		"vscode": "^1.50.0"
+	},
+	"categories": [
+		"Other"
+	],
+	"activationEvents": [
+		"onCommand:lin.hello",
+		"onCommand:lin.start",
+		"onCommand:lin.help",
+		"onCommand:lin.linearize"
+	],
+	"main": "./src/extension.js",
+	"contributes": {
+		"commands": [
+			{
+				"command": "lin.hello",
+				"title": "Hello"
+			},
+			{
+				"command": "lin.start",
+				"title": "Start linearizer",
+				"category": "Linearizer"
+			},{
+				"command": "lin.help",
+				"title": "Help",
+				"category": "Linearizer"
+			},
+			{
+				"command": "lin.linearize",
+				"title": "Linearize",
+				"category": "Linearizer"
+			}
+
+		]
+	},
+	"scripts": {
+		"lint": "eslint .",
+		"pretest": "npm run lint",
+		"test": "node ./test/runTest.js"
+	},
+	"devDependencies": {
+		"@types/vscode": "^1.50.0",
+		"@types/glob": "^7.1.3",
+		"@types/mocha": "^8.0.0",
+		"@types/node": "^12.11.7",
+		"eslint": "^7.9.0",
+		"glob": "^7.1.6",
+		"mocha": "^8.1.3",
+		"typescript": "^4.0.2",
+		"vscode-test": "^1.4.0"
+	},
+	"dependencies": {
+		"file-saver": "^2.0.5",
+		"jsdom": "^16.4.0",
+		"node-fetch": "^2.6.1",
+		"open": "^7.3.0",
+		"showdown": "1.9.1"
+	}
+}
