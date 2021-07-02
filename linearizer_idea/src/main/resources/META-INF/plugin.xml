@@ -28,6 +28,7 @@
   <extensions defaultExtensionNs="com.intellij">
     <toolWindow id="Git history linearizer" secondary="true" icon="AllIcons.Vcs.Vendors.Github" anchor="right"
                 factoryClass="lin_idea.LinearizerToolWindowFactory"/>
+    <projectService serviceImplementation="lin_idea.LinStateService"/>
   </extensions>
 
   <actions>

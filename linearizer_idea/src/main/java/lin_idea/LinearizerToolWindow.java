@@ -2,6 +2,7 @@
 
 package lin_idea;
 
+import com.intellij.openapi.components.ServiceManager;
 import com.intellij.openapi.fileChooser.PathChooserDialog;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.project.ProjectManager;
@@ -94,11 +95,10 @@ public class LinearizerToolWindow {
     public void onOpenRepoButton() {
         JFileChooser j = new JFileChooser();
         j.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-        try {
-            j.showOpenDialog(repoTextField);
-        }
-        catch (java.awt.HeadlessException e) {/* cancel button pressed */}
-        repoTextField.setText(j.getSelectedFile().toString());
+        j.showOpenDialog(repoTextField);
+        File choice = j.getSelectedFile();
+        if (choice == null) { /* fallthrough */ } // Cancel button pressed
+        else { repoTextField.setText(choice.toString()); }
     }
 
     // VCS log toolbar
@@ -155,6 +155,9 @@ public class LinearizerToolWindow {
             return;
         }
 
+        //LinStateService c = ServiceManager.getService(LinStateService.class);
+        //c.setStartCommit(startCommitTextField.getText());
+
         try {
             Linearizer.processRepo(repo, refID, startCommit, settings);
         }
@@ -164,6 +167,7 @@ public class LinearizerToolWindow {
             return;
         }
         setGreenLabel("OK");
+
     }
 
     void onRepoRefreshButton() {
