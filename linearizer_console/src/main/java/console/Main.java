@@ -81,6 +81,7 @@ public class Main {
             if (args.length < 1) {
                 System.err.println("Incorrect input. No arguments received. See the example");
                 System.err.println("linearizer [-h|-l] arguments...");
+                parser.printUsage(out);
                 System.exit(-1);
             }
 
@@ -96,9 +97,8 @@ public class Main {
         if(list != null){
             try {
                 if (list.size() < 3) {
-                   // System.err.println("Incorrect input. See the example");
-                  //  System.err.println("Linearizer -l <repo_path> <branch> <start_commit> [-r] [-s] [-f]");
-                   // System.exit(-1);
+                    System.err.println("Not enough args");
+                    parser.printUsage(out);
                 }
                 String[] emptyParams = new String[0];
                 Map<String, String[]> settings = new TreeMap<>();
