@@ -1,9 +1,5 @@
-// Copyright 2000-2020 JetBrains s.r.o. and other contributors. Use of this source code is governed by the Apache 2.0 license that can be found in the LICENSE file.
-
 package lin_idea;
 
-import com.intellij.openapi.components.ServiceManager;
-import com.intellij.openapi.fileChooser.PathChooserDialog;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.project.ProjectManager;
 import com.intellij.openapi.roots.ProjectRootManager;
@@ -21,10 +17,8 @@ import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.Map;
 import java.util.TreeMap;
-import java.util.regex.PatternSyntaxException;
 
 import lin_core.Linearizer;
 import org.eclipse.jgit.storage.file.FileRepositoryBuilder;
@@ -49,25 +43,31 @@ public class LinearizerToolWindow {
 
     private Icon refreshIcon = IconLoader.getIcon("/icons/application/refresh.png");
 
-    //private Linearizer linearizerInstance;
-
     public LinearizerToolWindow(ToolWindow toolWindow) {
+        // Attach action listeners
         hideToolWindowButton.addActionListener(e -> toolWindow.hide(null));
-        linearizeButton.addActionListener(e -> onLinearizeButton());
+        linearizeButton.addActionListener(e -> linearize());
         openRepoButton.addActionListener(e -> onOpenRepoButton());
-        repoRefreshButton.addActionListener(e -> onRepoRefreshButton());
+        repoRefreshButton.addActionListener(e -> refreshRepoPath());
         refIDRefreshButton.addActionListener(e -> onRefIDRefreshButton());
 
+        // Set ToolWindow content
         statusLabel.setText("");
         repoRefreshButton.setIcon(refreshIcon);
         refIDRefreshButton.setIcon(refreshIcon);
 
-        onRepoRefreshButton();
+        // Set repo path and ref id on start
+        refreshRepoPath();
         onRefIDRefreshButton();
 
-        StartCommitTextFieldRef.setRef(startCommitTextField);
+        LinearizerToolWindowRef.setRef(this);
     }
 
+    public JPanel getContent() {
+        return linearizerToolWindowContent;
+    }
+
+    // Get current working directory
     VirtualFile[] getContentRoots() {
         final Project project = ProjectManager.getInstance().getOpenProjects()[0];
         VirtualFile[] contentRoots = ProjectRootManager.getInstance(project).getContentRoots();
@@ -75,16 +75,23 @@ public class LinearizerToolWindow {
         return contentRoots;
     }
 
+    // This function adds ".git" to the end of path if it is not present
     Path fixRepoPath(String path) throws NoSuchFileException {
         Path repoDir = Paths.get(path);
-        if (!Files.exists(repoDir)) { // Check path before appending .git
+
+        // Check path before appending .git
+        if (!Files.exists(repoDir)) {
             setRedLabel("No such file or directory");
             throw new NoSuchFileException(path);
         }
         if (!path.matches("^(([^\\\\/]*[\\\\/])*)(\\.git[\\\\/]?)$")) {
+            // If there is no ".git"
+            // Append ".git"
             repoDir = repoDir.resolve(".git");
         }
-        if (!Files.exists(repoDir)) { // Check path after appending .git
+
+        // Check path after appending .git
+        if (!Files.exists(repoDir)) {
             setRedLabel("No such file or directory");
             throw new NoSuchFileException(path);
         }
@@ -101,8 +108,9 @@ public class LinearizerToolWindow {
         else { repoTextField.setText(choice.toString()); }
     }
 
-    // VCS log toolbar
-    public void onLinearizeButton() {
+    // Check all input data and call linearizer
+    public void linearize() {
+        // Check repo path
         String repoPath = repoTextField.getText().trim();
         Path repoDir;
         try { repoDir = fixRepoPath(repoPath); }
@@ -113,6 +121,7 @@ public class LinearizerToolWindow {
         }
         repoTextField.setText(repoDir.toString());
 
+        // Create JGit repo object
         FileRepositoryBuilder builder = new FileRepositoryBuilder();
         builder.setGitDir(repoDir.toFile())
                 .readEnvironment()
@@ -144,11 +153,14 @@ public class LinearizerToolWindow {
             settings.put("badStarts", newBadStarts.toArray(new String[0]));
         }
 
+        // Check Ref ID
         String refID = refIDTextField.getText();
         if (!refID.matches("^[^\\\\/]+([\\\\/][^\\\\/]+){2}$")) {
             setRedLabel("Incorrect branch name");
             return;
         }
+
+        // Check start commit ID
         String startCommit = startCommitTextField.getText();
         if (startCommit.isEmpty()) {
             setRedLabel("Incorrect start commit id");
@@ -158,6 +170,7 @@ public class LinearizerToolWindow {
         //LinStateService c = ServiceManager.getService(LinStateService.class);
         //c.setStartCommit(startCommitTextField.getText());
 
+        // Run linearizer
         try {
             Linearizer.processRepo(repo, refID, startCommit, settings);
         }
@@ -166,36 +179,41 @@ public class LinearizerToolWindow {
             setRedLabel("Linearizer failed");
             return;
         }
-        setGreenLabel("OK");
 
+        // Display success
+        setGreenLabel("OK");
     }
 
-    void onRepoRefreshButton() {
+    // Sets repo path text field to current opened project
+    void refreshRepoPath() {
         VirtualFile[] contentRoots = getContentRoots();
         if (contentRoots.length != 0) {
             repoTextField.setText(contentRoots[0].getPath() + "/.git");
         }
     }
 
+    // Set RefID default value
     void onRefIDRefreshButton() {
         refIDTextField.setText("refs/heads/master");
     }
 
-    public JPanel getContent() {
-        return linearizerToolWindowContent;
-    }
-
+    // Display red status message
     private void setRedLabel(String text) {
         statusLabel.setText(text);
         statusLabel.setForeground(Color.RED);
     }
 
+    // Display green status message
     private void setGreenLabel(String text) {
         statusLabel.setText(text);
         statusLabel.setForeground(Color.GREEN);
     }
 
     private void createUIComponents() {
-        // TODO: place custom component creation code here
+        // fallthrough
+    }
+
+    public void setStartCommitID(String s) {
+        startCommitTextField.setText(s);
     }
 }
