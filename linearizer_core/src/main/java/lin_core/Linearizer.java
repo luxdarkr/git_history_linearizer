@@ -14,12 +14,15 @@ import java.io.File;
 import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class Linearizer {
     public static class Settings {
         public boolean strip = false;
         public boolean fixCase = false;
         public String[] badStarts = null;
+        public boolean fixBig = false;
     }
 
     // TODO refactor in project scape
@@ -43,6 +46,9 @@ public class Linearizer {
         }
         if (settings.containsKey("fixCase")) {
             result.fixCase = true;
+        }
+        if (settings.containsKey("fixBig")){
+            result.fixBig = true;
         }
         return result;
     }
@@ -141,6 +147,9 @@ public class Linearizer {
         }
         if (settings.fixCase) {
             result = fixCase(result);
+        }
+        if (settings.fixBig) {
+            result = fixBigCommitMessage(result);
         }
         return result;
     }
@@ -246,7 +255,15 @@ public class Linearizer {
     }
 
     private static String fixBigCommitMessage(String original) throws NullPointerException {
-        // TODO implement
+        StringBuilder o = new StringBuilder(original);
+        int i = 0;
+        int split_index = 15;
+
+        if ((i = o.indexOf(" ", i + split_index)) != -1){
+            o.replace(i, i + 1, "\n\n");
+        }
+
+        original = o.toString();
         return original;
     }
 }

@@ -115,6 +115,10 @@ public class Main {
                     settings.put("fixCase", emptyParams);
                 }
 
+                if(fixbig){
+                    settings.put("fixBig", emptyParams);
+                }
+
                 //Linearizer.processRepo("D:\\git_linearizer\\tests\\git_test_simple\\.git", "refs/heads/master", "e40fc2fbea20214634e22445d2339e59b5067017", settings  );
                 Linearizer.processRepo(list.get(0), list.get(1), list.get(2), settings);
             } catch(CmdLineException e){
