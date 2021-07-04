@@ -14,7 +14,7 @@
 		"onCommand:lin.hello",
 		"onCommand:lin.start",
 		"onCommand:lin.help",
-		"onCommand:lin.linearize"
+		"*"
 	],
 	"main": "./src/extension.js",
 	"contributes": {
@@ -27,17 +27,12 @@
 				"command": "lin.start",
 				"title": "Start linearizer",
 				"category": "Linearizer"
-			},{
+			},
+			{
 				"command": "lin.help",
 				"title": "Help",
 				"category": "Linearizer"
-			},
-			{
-				"command": "lin.linearize",
-				"title": "Linearize",
-				"category": "Linearizer"
 			}
-
 		]
 	},
 	"scripts": {

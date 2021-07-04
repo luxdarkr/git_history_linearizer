@@ -13,7 +13,7 @@ function getWebviewContent() {
         <style>
           body {
             position: relative;
-            margin-top: 15%;
+            margin-top: 5%;
           }
       
           .form {
@@ -39,7 +39,6 @@ function getWebviewContent() {
             font-size: 2vh;
             line-height: 5vh;
             width: 40vw;
-            margin-top: 3%;
             display: flex;
             align-items: center;
             background: #CCCCCC;
@@ -51,9 +50,6 @@ function getWebviewContent() {
             display: flex;
             flex-direction: wrap;
             align-items: center;
-          }
-          .choice{
-            margin-top: 2vh;
           }
           .checks {
             margin-top: 1vh;
@@ -99,15 +95,24 @@ function getWebviewContent() {
             background: #26138f;
             color: #F7F7F7;
           }
+
+          .lines {
+            font-family: Roboto;
+            text-align: left;
+          }
         </style>
       </head>
       
       <body>
         <div class="form">
-            <form>
-                <input class="inp" type="text" placeholder="Repository" id="rep">
-                <input class="inp" type="text" placeholder="Branch" id="branch">
-                <input class="inp" type="text" placeholder="Start" id="start">
+            <h1>Git Linearizer</h1>
+            <form class="lines">
+                <p>Path to repository: <p>
+                <input class="inp" type="text" placeholder="C:\\examplePackage\\...\\.git" id="rep">
+                <p>Name of linearised branch: <p>
+                <input class="inp" type="text" placeholder="name_of_the_branch" id="branch">
+                <p>Start point: <p>
+                <input class="inp" type="text" placeholder="ex12ample3456hash" id="start">
             </form>
             <div class="choice">
               <div class="checks">
