@@ -15,7 +15,7 @@ function activate(context) {
   context.subscriptions.push(help);
   context.subscriptions.push(
     vscode.commands.registerCommand('lin.start', () => {
-      // Create and show panel
+      
       const panel = vscode.window.createWebviewPanel(
         'lin',
         'Linearizer',
@@ -25,10 +25,8 @@ function activate(context) {
         }
       );
 
-      // And set its HTML content
       panel.webview.html = getWebviewContent();
 
-      // Handle messages from the webview
       panel.webview.onDidReceiveMessage(
         message => {
           switch (message.command) {
