@@ -101,6 +101,7 @@ public class Linearizer {
         List<RevCommit> orderedCommits = getOrder(walk, commit, startCommit, git);
         createAndSwitchBranch(git, startCommit);
         Collections.reverse(orderedCommits);
+        RevCommit lastCommit = null;
         for (RevCommit curCommit : orderedCommits) {
             String newMessage = fixString(curCommit.getFullMessage(), settings);
             if (newMessage != null) {
@@ -114,16 +115,18 @@ public class Linearizer {
                             .setMainlineParentNumber(1) // parent index starts from 1 here
                             .call();
                 }
-                git.commit()
+                newMessage = newMessage.strip();
+                lastCommit = git.commit()
                         .setAmend(true)
                         .setMessage(newMessage)
                         .call();
+
             }
         }
 
         walk.dispose();
         git.close();
-        return new CommitPair(null, null);
+        return new CommitPair(startCommit, lastCommit);
     }
 
     private static String fixString(String original, Settings settings) {
