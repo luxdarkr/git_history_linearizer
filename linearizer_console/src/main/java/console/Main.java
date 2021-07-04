@@ -16,7 +16,6 @@ import org.kohsuke.args4j.Option;
 import org.kohsuke.args4j.spi.StringArrayOptionHandler;
 
 public class Main {
-
     @Option(
             name = "-h",
             aliases = "--help",
@@ -70,7 +69,6 @@ public class Main {
     private List<String> args = new ArrayList<String>();
 
     public static void main(String[] args) throws Exception {
-
         Main main = new Main();
         main.parseArgs(args);
     }
@@ -83,6 +81,7 @@ public class Main {
             if (args.length < 1) {
                 System.err.println("Incorrect input. No arguments received. See the example");
                 System.err.println("linearizer [-h|-l] arguments...");
+                parser.printUsage(out);
                 System.exit(-1);
             }
 
@@ -98,9 +97,8 @@ public class Main {
         if(list != null){
             try {
                 if (list.size() < 3) {
-                   // System.err.println("Incorrect input. See the example");
-                  //  System.err.println("Linearizer -l <repo_path> <branch> <start_commit> [-r] [-s] [-f]");
-                   // System.exit(-1);
+                    System.err.println("Not enough args");
+                    parser.printUsage(out);
                 }
                 String[] emptyParams = new String[0];
                 Map<String, String[]> settings = new TreeMap<>();
@@ -115,6 +113,10 @@ public class Main {
 
                 if (fixcase){
                     settings.put("fixCase", emptyParams);
+                }
+
+                if(fixbig){
+                    settings.put("fixBig", emptyParams);
                 }
 
                 //Linearizer.processRepo("D:\\git_linearizer\\tests\\git_test_simple\\.git", "refs/heads/master", "e40fc2fbea20214634e22445d2339e59b5067017", settings  );

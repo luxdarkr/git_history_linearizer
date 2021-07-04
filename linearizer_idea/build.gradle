@@ -17,7 +17,7 @@ buildSearchableOptions {
 patchPluginXml {
   version = project.version
   sinceBuild = '183'
-  untilBuild = '211'
+  untilBuild = '221'
 }
 
 repositories {
@@ -45,4 +45,6 @@ dependencies {
 
 intellij {
   version = "2020.2"
+  //pluginName 'linearizer_idea'
+  plugins = ['Git4Idea']
 }
