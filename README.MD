@@ -55,6 +55,7 @@ This action automatically starts linearizer from this commit to the selected hea
 
 Plugin is written on JavaScript.  
 There are two main commands: "start" and "help".  
+
 **1. Start.**  
  Command **"Start"** opens the main window.  
 Main window includes three input fields (Path, Name and Start), one checkbox with special options and two buttons (Linearize and Help).
