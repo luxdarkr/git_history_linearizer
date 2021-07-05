@@ -1,5 +1,8 @@
 package console;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -7,6 +10,7 @@ import java.util.TreeMap;
 
 import static java.lang.System.out;
 
+import lin_core.CommitPair;
 import lin_core.Linearizer;
 
 import org.kohsuke.args4j.Argument;
@@ -31,7 +35,7 @@ public class Main {
             forbids = {"-h"},
             usage = "Performs linearization between first and last commits, then puts it in a new fork."
     )
-    private List<String> list;
+    private String[] list;
 
     @Option(
             name = "-s",
@@ -65,9 +69,6 @@ public class Main {
     )
     private boolean fixbig = false;
 
-    @Argument
-    private List<String> args = new ArrayList<String>();
-
     public static void main(String[] args) throws Exception {
         Main main = new Main();
         main.parseArgs(args);
@@ -75,13 +76,14 @@ public class Main {
 
     public void parseArgs(String[] args) throws Exception {
         final CmdLineParser parser = new CmdLineParser(this);
+        boolean usage = false;
         try {
             parser.parseArgument(args);
 
             if (args.length < 1) {
                 System.err.println("Incorrect input. No arguments received. See the example");
                 System.err.println("linearizer [-h|-l] arguments...");
-                parser.printUsage(out);
+                usage = true;
                 System.exit(-1);
             }
 
@@ -96,10 +98,30 @@ public class Main {
 
         if(list != null){
             try {
-                if (list.size() < 3) {
-                    System.err.println("Not enough args");
+                if (list.length == 3) {
+
+                    Path repo_path = Paths.get(list[0]);
+                    if (Files.notExists(repo_path)){
+                        System.err.println("Incorrect repository path");
+                        usage = true;
+                    }
+
+                    if (list[2].length() != 40){
+                        System.err.println("Incorrect commit id");
+                        usage = true;
+                    }
+
+                } else {
+                    System.err.println("Incorrect argument amount.\nThere must be three: repo_path, branch, start_commit");
+                    usage = true;
+                }
+
+                if(usage == true){
+                    System.err.println("Linearizer -l <repo_path> <branch> <start> [message_fix_options");
                     parser.printUsage(out);
                 }
+
+
                 String[] emptyParams = new String[0];
                 Map<String, String[]> settings = new TreeMap<>();
 
@@ -119,12 +141,13 @@ public class Main {
                     settings.put("fixBig", emptyParams);
                 }
 
-                //Linearizer.processRepo("D:\\git_linearizer\\tests\\git_test_simple\\.git", "refs/heads/master", "e40fc2fbea20214634e22445d2339e59b5067017", settings  );
-                Linearizer.processRepo(list.get(0), list.get(1), list.get(2), settings);
+                CommitPair linRes = Linearizer.processRepo(list[0], list[1], list[2], settings);
+                System.out.println(linRes.second.toString().substring(7, 47));
             } catch(CmdLineException e){
                 System.err.println(e.getMessage());
             }
         }
+
 
     }
 
