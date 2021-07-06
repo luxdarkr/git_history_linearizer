@@ -20,6 +20,13 @@ import org.kohsuke.args4j.Option;
 import org.kohsuke.args4j.spi.StringArrayOptionHandler;
 
 public class Main {
+
+    final CmdLineParser parser = new CmdLineParser(this);
+    public void printUsage(){
+        System.out.println("Linearizer -l <repo_path> <branch> <start> [message_fix_options]");
+        parser.printUsage(out);
+    }
+
     @Option(
             name = "-h",
             aliases = "--help",
@@ -35,7 +42,7 @@ public class Main {
             forbids = {"-h"},
             usage = "Performs linearization between first and last commits, then puts it in a new fork."
     )
-    private String[] list;
+    private List<String> list;
 
     @Option(
             name = "-s",
@@ -75,14 +82,13 @@ public class Main {
     }
 
     public void parseArgs(String[] args) throws Exception {
-        final CmdLineParser parser = new CmdLineParser(this);
         boolean usage = false;
         try {
             parser.parseArgument(args);
 
+
             if (args.length < 1) {
-                System.err.println("Incorrect input. No arguments received. See the example");
-                System.err.println("linearizer [-h|-l] arguments...");
+                System.out.println("Incorrect input. No arguments received. See the example");
                 usage = true;
                 System.exit(-1);
             }
@@ -92,33 +98,33 @@ public class Main {
         }
 
         if(help){
-            parser.printUsage(out);
+            printUsage();
         }
 
-
         if(list != null){
+            String repo = list.get(0);
+            String branch = list.get(1);
+            String commit = list.get(2);
             try {
-                if (list.length == 3) {
-
-                    Path repo_path = Paths.get(list[0]);
+                if (list.size() == 3) {
+                    Path repo_path = Paths.get(repo);
                     if (Files.notExists(repo_path)){
-                        System.err.println("Incorrect repository path");
+                        System.out.println("Incorrect repository path");
                         usage = true;
                     }
 
-                    if (list[2].length() != 40){
-                        System.err.println("Incorrect commit id");
+                    if (commit.length() != 40){
+                        System.out.println("Incorrect commit id");
                         usage = true;
                     }
 
                 } else {
-                    System.err.println("Incorrect argument amount.\nThere must be three: repo_path, branch, start_commit");
+                    System.out.println("Incorrect argument amount.\nThere must be three: repo_path, branch, start_commit");
                     usage = true;
                 }
 
                 if(usage == true){
-                    System.err.println("Linearizer -l <repo_path> <branch> <start> [message_fix_options");
-                    parser.printUsage(out);
+                    printUsage();
                 }
 
 
@@ -141,14 +147,11 @@ public class Main {
                     settings.put("fixBig", emptyParams);
                 }
 
-                CommitPair linRes = Linearizer.processRepo(list[0], list[1], list[2], settings);
+                CommitPair linRes = Linearizer.processRepo(repo, branch, commit, settings);
                 System.out.println(linRes.second.toString().substring(7, 47));
             } catch(CmdLineException e){
                 System.err.println(e.getMessage());
             }
         }
-
-
     }
-
 }
