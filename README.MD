@@ -1,5 +1,5 @@
 # Git history linearizer
-Linearizer - tool for simplyfying git history.  
+### Linearizer - tool for simplyfying git history.  
 
 Build status:<br>
 <img src="https://github.com/luxdarkr/git_history_linearizer/workflows/Java-CI-with-Gradle/badge.svg?branch=master"><br>
@@ -23,6 +23,15 @@ Performs linearization between first and last commits, then puts it in a new for
 Project can be built by using "build gradle" command. In the \git_history_linearizer\linearizer_console\build\libs folder Linearizer.jar will be created. You can run it with "java -jar" command, or by running "Linearizer.cmd" from git_history_linearizer folder.  
 
 When performing linearization (-l). Linearizer receives three arguments: path to the repository, the branch and the starting commit. After those arguments, you can add four flags for fixing commit messages. They allow fixing case, big messages, bad starts and striping messages. If linearization was successful, cmd will print out result commit.  
+
+#### Help (*Linearizer -h*):  
+![image](https://user-images.githubusercontent.com/79219538/125297104-9d7b3e80-e32f-11eb-9676-b1535694e596.png)  
+#### Linearize (*Linearize -l*):  
+![image](https://user-images.githubusercontent.com/79219538/125298433-cb14b780-e330-11eb-908c-679d35cb938b.png)  
+#### Repository via TortoiseGit before linearization:  
+![image](https://user-images.githubusercontent.com/79219538/125298668-07e0ae80-e331-11eb-9122-935bbab23e4f.png)  
+#### Repository after successful linearization and message fix:  
+![image](https://user-images.githubusercontent.com/79219538/125298935-4bd3b380-e331-11eb-8b8f-08d8d7ddf8f3.png)  
 
 ## Intellij Idea plugin
 This project can be built automatically with Gradle  
