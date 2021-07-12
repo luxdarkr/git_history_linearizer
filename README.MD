@@ -1,6 +1,9 @@
 # Git history linearizer
 Linearizer - tool for simplyfying git history.  
 
+Build status:<br>
+<img src="https://github.com/luxdarkr/git_history_linearizer/workflows/Java-CI-with-Gradle/badge.svg?branch=master"><br>
+
 ## Command Line Interface
 ##### Usage:
 `linearizer -l <repo_path> <branch> <start> [commit_message_options]`
