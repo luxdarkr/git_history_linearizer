@@ -135,7 +135,7 @@ public class Linearizer {
         return new CommitPair(startCommit, lastCommit);
     }
 
-    private static String fixString(String original, Settings settings) {
+    public static String fixString(String original, Settings settings) {
         String result = original;
         if (settings.badStarts != null) {
             result = removeBadStarts(result, settings.badStarts);
