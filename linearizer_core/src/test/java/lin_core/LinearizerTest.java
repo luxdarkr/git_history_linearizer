@@ -73,14 +73,27 @@ public class LinearizerTest {
         RevCommit headCommit = walk.parseCommit(head.getObjectId());
         RevCommit startCommit = walk.parseCommit(ObjectId.fromString(startCommitId));
 
-        List<RevCommit> commitsToLinearize = Linearizer.getOrder(walk, headCommit, startCommit, git);
-
         String linearizedDirHash = Hashing.hashDirectory(repoRootDir, true);
-
         executeCommand(repoRootDir, "git", "checkout", "master");
-
         String masterDirHash = Hashing.hashDirectory(repoRootDir, true);
-
         assert(linearizedDirHash.equals(masterDirHash));
+
+        List<RevCommit> commitsToLinearize = Linearizer.getOrder(walk, headCommit, startCommit, git);
+        head = repo.findRef("refs/heads/linearizer_work");
+        RevCommit newHeadCommit = walk.parseCommit(head.getObjectId());
+
+        RevCommit commit = newHeadCommit;
+        int ncommits = 0;
+
+
+        while (!commit.equals(startCommit)) {
+            RevCommit parentCommit = walk.parseCommit(commit.getId());
+            RevCommit[] parents = parentCommit.getParents();
+            assert(parents.length == 1);
+            commit = parents[0];
+            ncommits++;
+        }
+
+        assert(ncommits == commitsToLinearize.size());
     }
 }
