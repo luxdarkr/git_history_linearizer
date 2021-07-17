@@ -43,6 +43,8 @@ public class LinearizerToolWindow {
 
     private Icon refreshIcon = IconLoader.getIcon("/icons/application/refresh.png");
 
+    String[] emptyParams = new String[0];
+
     public LinearizerToolWindow(ToolWindow toolWindow) {
         // Attach action listeners
         hideToolWindowButton.addActionListener(e -> toolWindow.hide(null));
@@ -137,20 +139,23 @@ public class LinearizerToolWindow {
         // Checkboxes processing
         Map<String, String[]> settings = new TreeMap<>();
         if (stripCommitMessagesCheckBox.isSelected()) {
-            settings.put("strip", new String[0]);
+            settings.put("strip", emptyParams);
         }
         if (fixCaseCheckBox.isSelected()) {
-            settings.put("fixCase", new String[0]);
+            settings.put("fixCase", emptyParams);
         }
         if (fixBadStartsCheckBox.isSelected()) {
             String[] badStarts = badStartsTextField.getText().split(",");
-            ArrayList<String> newBadStarts = new ArrayList<String>();
+            ArrayList<String> newBadStarts = new ArrayList<>();
             for (int i = 0; i < badStarts.length; i++) {
                 if (!badStarts[i].isEmpty()) {
                     newBadStarts.add(badStarts[i]);
                 }
             }
             settings.put("badStarts", newBadStarts.toArray(new String[0]));
+        }
+        if (fixBigMessagesCheckBox.isSelected()) {
+            settings.put("fixBig", emptyParams);
         }
 
         // Check Ref ID

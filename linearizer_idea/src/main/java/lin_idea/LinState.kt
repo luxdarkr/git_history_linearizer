@@ -7,5 +7,5 @@ data class LinState (
     public var startCommitTextField: String = "",
     var refIDTextField: String = "",
     var repoTextField: String = "",
-    var badStartsTextField: String = "",
+    var badStartsTextField: String = ""
 )
