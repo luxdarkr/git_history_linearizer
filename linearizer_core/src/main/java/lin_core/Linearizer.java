@@ -123,6 +123,7 @@ public class Linearizer {
                     if (curCommit.getParents().length != 0) {
                         add("-m 1");
                     }
+                    add("-Xrename-threshold=20%");
                 }};
                 ProcessBuilder builder = new ProcessBuilder(command);
                 builder = builder.directory(new File(System.getProperty("user.dir")));
