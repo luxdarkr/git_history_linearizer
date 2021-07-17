@@ -2,6 +2,7 @@ package lin_core;
 
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
+import org.eclipse.jgit.diff.DiffEntry;
 import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.Ref;
 import org.eclipse.jgit.lib.Repository;
@@ -10,12 +11,13 @@ import org.eclipse.jgit.revwalk.RevTree;
 import org.eclipse.jgit.revwalk.RevWalk;
 import org.eclipse.jgit.storage.file.FileRepositoryBuilder;
 
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import static java.util.List.of;
 
 public class Linearizer {
     public static class Settings {
@@ -111,22 +113,26 @@ public class Linearizer {
         for (RevCommit curCommit : orderedCommits) {
             String newMessage = fixString(curCommit.getFullMessage(), settings);
             if (newMessage != null) {
-                if (curCommit.getParents().length == 0) {
-                    git.cherryPick()
-                            .include(curCommit)
-                            .call();
-                } else {
-                    git.cherryPick()
-                            .include(curCommit)
-                            .setMainlineParentNumber(1) // parent index starts from 1 here
-                            .call();
-                }
-                newMessage = newMessage.strip();
-                lastCommit = git.commit()
-                        .setAmend(true)
-                        .setMessage(newMessage)
-                        .call();
+                String repoGitPath = repo.getDirectory().toString();
+                String repoPath = repoGitPath.substring(0, repoGitPath.length() - 4);
+                List<String> command = new LinkedList() {{
+                    add("cherry_pick.cmd");
+                    add(repoPath);
+                    add(getCommitSHA(curCommit));
+                    add(newMessage.strip());
+                    if (curCommit.getParents().length != 0) {
+                        add("-m 1");
+                    }
+                }};
+                ProcessBuilder builder = new ProcessBuilder(command);
+                builder = builder.directory(new File(System.getProperty("user.dir")));
+                Process cpProcess = builder.start();
+                BufferedReader br = new BufferedReader(new InputStreamReader(cpProcess.getInputStream()));
 
+                String line;
+                while ((line = br.readLine()) != null) {
+                    System.out.println(line);
+                }
             }
         }
 
