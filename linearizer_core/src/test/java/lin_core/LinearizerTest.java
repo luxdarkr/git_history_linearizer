@@ -1,172 +1,86 @@
 package lin_core;
 
+import org.eclipse.jgit.api.Git;
+import org.eclipse.jgit.lib.ObjectId;
+import org.eclipse.jgit.lib.Ref;
+import org.eclipse.jgit.lib.Repository;
+import org.eclipse.jgit.revwalk.RevCommit;
+import org.eclipse.jgit.revwalk.RevWalk;
 import org.junit.Test;
 
-import static lin_core.Linearizer.generateSettings;
-import lin_core.Linearizer.*;
-
-import java.util.Arrays;
-import java.util.HashMap;
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
-import org.junit.jupiter.api.Assertions;
+import static lin_core.Linearizer.openRepo;
 
 public class LinearizerTest {
-    static String[] emptyParams = new String[0];
 
-    @Test
-    public void justAnExample() {
-        assert(1+2 == 3);
+    void executeCommand(File location, String ... command) throws IOException, InterruptedException {
+        ProcessBuilder pb = new ProcessBuilder(command);
+        pb.directory(location);
+        Process pr = pb.start();
+        pr.waitFor();
+    }
+
+    // Delete all linearizer work
+    // and return to master branch
+    void resetTestsFolder(File testsPath) throws IOException, InterruptedException {
+        executeCommand(testsPath, "git", "checkout", "master");
+        executeCommand(testsPath, "git", "branch", "-D", "linearizer_work");
     }
 
     @Test
-    public void settings() throws Exception {
-        Map<String, String[]> settingsMap;
-        Settings s;
+    public void linearizeRepoSimple() throws Exception {
+        // Path to the "tests" folder
+        Path testsPath = Paths.get(System.getProperty("user.dir"));
+        testsPath = testsPath.getParent().resolve("tests");
 
-        settingsMap = new HashMap<>() {{
-            put("strip", emptyParams);
-            put("fixCase", emptyParams);
-        }};
-        s = generateSettings(settingsMap);
-        assert(s.strip);
-        assert(s.fixCase);
-        assert(s.badStarts == null);
+        // Path to repo
+        Path repoDir = testsPath.resolve("git_test_simple/.git");
+        // Reset repo
+        resetTestsFolder(repoDir.getParent().toFile());
 
-        settingsMap = new HashMap<>() {{
-            put("badStarts", new String[]{"one", "two", "three"});
-            put("fixBig", emptyParams);
-        }};
-        s = generateSettings(settingsMap);
-        assert(s.strip == false);
-        assert(s.fixCase == false);
-        assert(Arrays.equals(s.badStarts, new String[]{"one", "two", "three"}));
-        assert(s.fixBig);
+        // Linearizer params
+        String[] emptyParams = new String[0];
+        Map<String, String[]> settings = new TreeMap<>();
+        settings.put("badStarts", new String[] {"*", "+"});
+        settings.put("strip", emptyParams);
+        settings.put("fixCase", emptyParams);
+
+        // Linearize repo
+        String refName = "refs/heads/master";
+        String startCommitId = "4c5568af4b07a41aa22f0fac200ed9af6b5e09ad";
+        Linearizer.processRepo(
+            repoDir.toString(),
+            refName,
+            startCommitId,
+            settings
+        );
+
+        Repository repo = Linearizer.openRepo(repoDir.toString());
+        Git git = new Git(repo);
+        RevWalk walk = new RevWalk(repo);
+        Iterable<RevCommit> commits = git.log().call();
+        Ref head = repo.findRef(refName);
+        File repoRootDir = repoDir.getParent().toFile();
+
+
+        RevCommit headCommit = walk.parseCommit(head.getObjectId());
+        RevCommit startCommit = walk.parseCommit(ObjectId.fromString(startCommitId));
+
+        List<RevCommit> commitsToLinearize = Linearizer.getOrder(walk, headCommit, startCommit, git);
+
+        String linearizedDirHash = Hashing.hashDirectory(repoRootDir, true);
+
+        executeCommand(repoRootDir, "git", "checkout", "master");
+
+        String masterDirHash = Hashing.hashDirectory(repoRootDir, true);
+
+        assert(linearizedDirHash.equals(masterDirHash));
     }
-
-    @Test
-    public void badStarts() throws Exception {
-        Map<String, String[]> settingsMap;
-        Settings s;
-
-        settingsMap = new HashMap<>() {{
-            put("badStarts", new String[] {"*", "+"});
-        }};
-
-        s = generateSettings(settingsMap);
-        String original = "*Commit message";
-        String result = "Commit message";
-        original = Linearizer.fixString(original, s);
-        Assertions.assertEquals(original, result);
-
-
-    }
-
-    @Test
-    public void fixBig() throws Exception {
-        Map<String, String[]> settingsMap;
-        Settings s;
-
-        settingsMap = new HashMap<>() {{
-            put("fixBig", emptyParams);
-        }};
-
-        s = generateSettings(settingsMap);
-        String original = "This is long commit message";
-        String result = "This is long commit\n\nmessage";
-        original = Linearizer.fixString(original, s);
-        Assertions.assertEquals(original, result);
-    }
-
-    @Test
-    public void fixCase() throws Exception {
-        Map<String, String[]> settingsMap;
-        Settings s;
-
-        settingsMap = new HashMap<>() {{
-            put("fixCase", emptyParams);
-        }};
-
-        s = generateSettings(settingsMap);
-        String original = "commit message";
-        String result = "Commit message";
-        original = Linearizer.fixString(original, s);
-        Assertions.assertEquals(original, result);
-
-
-    }
-
-    @Test
-    public void strip() throws Exception {
-        Map<String, String[]> settingsMap;
-        Settings s;
-
-        settingsMap = new HashMap<>() {{
-            put("strip", emptyParams);
-        }};
-
-        s = generateSettings(settingsMap);
-        String original = "         Commit message             ";
-        String result = "Commit message";
-        original = Linearizer.fixString(original, s);
-        Assertions.assertEquals(original, result);
-    }
-
-    @Test
-    public void stripAndFixCase() throws Exception {
-        Map<String, String[]> settingsMap;
-        Settings s;
-
-        settingsMap = new HashMap<>() {{
-            put("strip", emptyParams);
-            put("fixCase", emptyParams);
-        }};
-
-        s = generateSettings(settingsMap);
-        String original = "         commit message             ";
-        String result = "Commit message";
-        original = Linearizer.fixString(original, s);
-        Assertions.assertEquals(original, result);
-    }
-
-    @Test
-    public void badStartsAndFixBig() throws Exception {
-        Map<String, String[]> settingsMap;
-        Settings s;
-
-        settingsMap = new HashMap<>() {{
-            put("badStarts", new String[] {"*", "+"});
-            put("fixBig", emptyParams);
-        }};
-
-        s = generateSettings(settingsMap);
-        String original = "***+++This is long commit message";
-        String result = "This is long commit\n\nmessage";
-        original = Linearizer.fixString(original, s);
-        Assertions.assertEquals(original, result);
-    }
-
-    @Test
-    public void fixAll() throws Exception {
-        Map<String, String[]> settingsMap;
-        Settings s;
-
-        settingsMap = new HashMap<>() {{
-            put("badStarts", new String[] {"*", "+"});
-            put("fixBig", emptyParams);
-            put("strip", emptyParams);
-            put("fixCase", emptyParams);
-        }};
-
-        s = generateSettings(settingsMap);
-        String original = "***+++        this is long commit message                ";
-        String result = "This is long commit\n\nmessage";
-        original = Linearizer.fixString(original, s);
-        Assertions.assertEquals(original, result);
-    }
-
-
-
-
 }

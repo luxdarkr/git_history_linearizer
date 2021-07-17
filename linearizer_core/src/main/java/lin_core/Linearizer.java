@@ -156,7 +156,7 @@ public class Linearizer {
         return commit.getId().toObjectId().toString().substring(7, 7 + 40);
     }
 
-    private static List<RevCommit> getOrder(RevWalk walk, RevCommit headCommit, RevCommit startCommit, Git git) throws Exception {
+    protected static List<RevCommit> getOrder(RevWalk walk, RevCommit headCommit, RevCommit startCommit, Git git) throws Exception {
         Map<RevCommit, AtomicInteger> childrenCounts = new TreeMap<>();
         Iterable<RevCommit> commits = git.log().call();
         for (RevCommit commit : commits) {
