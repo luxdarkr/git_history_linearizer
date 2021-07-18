@@ -1,6 +1,6 @@
-*
-*/
+**
 !.gitignore
 !clone_tests.sh
 !removetests.sh
 !Spread Sheet Document
+!datasets/
