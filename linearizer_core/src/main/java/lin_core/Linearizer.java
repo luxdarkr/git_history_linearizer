@@ -30,7 +30,16 @@ public class Linearizer {
     // TODO add class for message fixing
     public static Settings generateSettings(Map<String, String[]> settings) throws Exception {
         Settings result = new Settings();
+        if (settings.containsKey("strip")) {
+            result.strip = true;
+        }
+
+        if (settings.containsKey("fixCase")) {
+            result.fixCase = true;
+        }
+
         if (settings.containsKey("badStarts")) {
+
             result.badStarts = settings.get("badStarts");
             for (String entry : result.badStarts) {
                 if (entry == null) {
@@ -41,12 +50,7 @@ public class Linearizer {
                 }
             }
         }
-        if (settings.containsKey("strip")) {
-            result.strip = true;
-        }
-        if (settings.containsKey("fixCase")) {
-            result.fixCase = true;
-        }
+
         if (settings.containsKey("fixBig")){
             result.fixBig = true;
         }
@@ -137,15 +141,23 @@ public class Linearizer {
 
     public static String fixString(String original, Settings settings) {
         String result = original;
-        if (settings.badStarts != null) {
-            result = removeBadStarts(result, settings.badStarts);
-        }
+
         if (settings.strip) {
             result = strip(result);
         }
+
+        if (settings.badStarts != null) {
+            result = removeBadStarts(result, settings.badStarts);
+        }
+
+        if (settings.strip) {
+            result = strip(result);
+        }
+
         if (settings.fixCase) {
             result = fixCase(result);
         }
+
         if (settings.fixBig) {
             result = fixBigCommitMessage(result);
         }
@@ -233,7 +245,7 @@ public class Linearizer {
         }
         Character firstChar = original.charAt(0);
         if (Character.isLowerCase(firstChar)) {
-            return Character.toUpperCase(firstChar) + original.substring(1);
+            return Character.toUpperCase(firstChar) + original.substring(1).toLowerCase();
         }
         return original;
     }

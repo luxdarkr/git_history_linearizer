@@ -87,7 +87,7 @@ public class MessageFixTest {
         }};
 
         s = generateSettings(settingsMap);
-        String original = "commit message";
+        String original = "cOMMIT MESSAGE";
         String result = "Commit message";
         original = Linearizer.fixString(original, s);
         Assertions.assertEquals(original, result);
@@ -156,7 +156,7 @@ public class MessageFixTest {
         }};
 
         s = generateSettings(settingsMap);
-        String original = "***+++        this is long commit message                ";
+        String original = "          ***+++        this is long commit message                ";
         String result = "This is long commit\n\nmessage";
         original = Linearizer.fixString(original, s);
         Assertions.assertEquals(original, result);
