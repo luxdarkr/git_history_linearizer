@@ -10,6 +10,7 @@ import org.junit.Test;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
@@ -34,32 +35,32 @@ public class LinearizerTest {
         executeCommand(testsPath, "git", "branch", "-D", "linearizer_work");
     }
 
-    @Test
-    public void linearizeRepoSimple() throws Exception {
+    Path getTestPath() {
+        return Paths
+            .get(System.getProperty("user.dir"))
+            .getParent()
+            .resolve("tests");
+    }
+
+    void testLinearizerOnRepository(String repoPath, String refName, String startCommitId) throws Exception {
         // Path to the "tests" folder
-        Path testsPath = Paths.get(System.getProperty("user.dir"));
-        testsPath = testsPath.getParent().resolve("tests");
+        Path testPath = getTestPath();
 
         // Path to repo
-        Path repoDir = testsPath.resolve("git_test_simple/.git");
+        Path repoDir = testPath.resolve(repoPath);
         // Reset repo
         resetTestsFolder(repoDir.getParent().toFile());
 
         // Linearizer params
         String[] emptyParams = new String[0];
         Map<String, String[]> settings = new TreeMap<>();
-        settings.put("badStarts", new String[] {"*", "+"});
-        settings.put("strip", emptyParams);
-        settings.put("fixCase", emptyParams);
 
         // Linearize repo
-        String refName = "refs/heads/master";
-        String startCommitId = "4c5568af4b07a41aa22f0fac200ed9af6b5e09ad";
         Linearizer.processRepo(
-            repoDir.toString(),
-            refName,
-            startCommitId,
-            settings
+                repoDir.toString(),
+                refName,
+                startCommitId,
+                settings
         );
 
         Repository repo = Linearizer.openRepo(repoDir.toString());
@@ -80,9 +81,8 @@ public class LinearizerTest {
 
         List<RevCommit> commitsToLinearize = Linearizer.getOrder(walk, headCommit, startCommit, git);
         head = repo.findRef("refs/heads/linearizer_work");
-        RevCommit newHeadCommit = walk.parseCommit(head.getObjectId());
 
-        RevCommit commit = newHeadCommit;
+        RevCommit commit = walk.parseCommit(head.getObjectId());
         int ncommits = 0;
 
 
@@ -96,4 +96,65 @@ public class LinearizerTest {
 
         assert(ncommits == commitsToLinearize.size());
     }
+
+    @Test
+    public void linearizeRepoSimple() throws Exception {
+        Path t = getTestPath().resolve("datasets/git_test_simple");
+        if (!Files.exists(t)) {
+            executeCommand(t.getParent().toFile(), "git", "clone", "https://github.com/luxdarkr/git_test_simple.git");
+        }
+
+        testLinearizerOnRepository(
+                "datasets/git_test_simple/.git",
+                "refs/heads/master",
+                "4c5568af4b07a41aa22f0fac200ed9af6b5e09ad"
+        );
+        testLinearizerOnRepository(
+                "datasets/git_test_simple/.git",
+                "refs/heads/master",
+                "eb3884537613d77d41e0f7575bedbcb00e19a6fc"
+        );
+    }
+
+    /*@Test
+    public void linearizeTechnoEvents() throws Exception {
+        Path t = getTestPath().resolve("datasets/TechnoEvents");
+        if (!Files.exists(t)) {
+            executeCommand(t.getParent().toFile(), "git", "clone", "https://github.com/Hiraev/TechnoEvents.git");
+        }
+
+        testLinearizerOnRepository(
+                "datasets/TechnoEvents/.git",
+                "refs/heads/master",
+                "58674c1e220890b1069156b0774c9cecf294480d"
+        );
+    }*/
+
+    /*@Test
+    public void linearizeSyto() throws Exception {
+        Path t = getTestPath().resolve("datasets/syto");
+        if (!Files.exists(t)) {
+            executeCommand(t.getParent().toFile(), "git", "clone", "https://github.com/SashkoTar/syto");
+        }
+
+        testLinearizerOnRepository(
+                "datasets/syto/.git",
+                "refs/heads/master",
+                "de05e2246717366bb0af2b4e44b988d0f871ec1f"
+        );
+    }*/
+
+    /*@Test
+    public void linearizeModbusRS() throws Exception {
+        Path t = getTestPath().resolve("datasets/modbus-rs");
+        if (!Files.exists(t)) {
+            executeCommand(t.getParent().toFile(), "git", "clone", "https://github.com/hirschenberger/modbus-rs.git");
+        }
+
+        testLinearizerOnRepository(
+                "datasets/modbus-rs/.git",
+                "refs/heads/master",
+                "5aa5db782d8a90c1e2d3934bfaf05abd3a5a6863"
+        );
+    }*/
 }
