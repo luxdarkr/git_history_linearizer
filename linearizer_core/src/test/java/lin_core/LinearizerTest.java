@@ -23,18 +23,11 @@ import static lin_core.Linearizer.openRepo;
 
 public class LinearizerTest {
 
-    void executeCommand(File location, String ... command) throws IOException, InterruptedException {
-        ProcessBuilder pb = new ProcessBuilder(command);
-        pb.directory(location);
-        Process pr = pb.start();
-        pr.waitFor();
-    }
-
     // Delete all linearizer work
     // and return to master branch
     void resetTestsFolder(File testsPath) throws IOException, InterruptedException {
-        executeCommand(testsPath, "git", "checkout", "master");
-        executeCommand(testsPath, "git", "branch", "-D", "linearizer_work");
+        Linearizer.executeCommand(false, testsPath, "git", "checkout", "master");
+        Linearizer.executeCommand(false, testsPath, "git", "branch", "-D", "linearizer_work");
     }
 
     Path getTestPath() {
@@ -78,7 +71,7 @@ public class LinearizerTest {
 
         try {
             String linearizedDirHash = Hashing.hashDirectory(repoRootDir, true);
-            executeCommand(repoRootDir, "git", "checkout", "master");
+            Linearizer.executeCommand(false, repoRootDir, "git", "checkout", "master");
             String masterDirHash = Hashing.hashDirectory(repoRootDir, true);
 
             assert(linearizedDirHash.equals(masterDirHash));
@@ -105,7 +98,7 @@ public class LinearizerTest {
     public void linearizeRepoSimple() throws Exception {
         Path t = getTestPath().resolve("datasets/git_test_simple");
         if (!Files.exists(t)) {
-            executeCommand(t.getParent().toFile(), "git", "clone", "https://github.com/luxdarkr/git_test_simple.git");
+            Linearizer.executeCommand(false, t.getParent().toFile(), "git", "clone", "https://github.com/luxdarkr/git_test_simple.git");
         }
 
         testLinearizerOnRepository(
@@ -124,7 +117,7 @@ public class LinearizerTest {
     public void linearizeTechnoEvents() throws Exception {
         Path t = getTestPath().resolve("datasets/TechnoEvents");
         if (!Files.exists(t)) {
-            executeCommand(t.getParent().toFile(), "git", "clone", "https://github.com/Hiraev/TechnoEvents.git");
+            Linearizer.executeCommand(false, t.getParent().toFile(), "git", "clone", "https://github.com/Hiraev/TechnoEvents.git");
         }
 
         testLinearizerOnRepository(
@@ -138,7 +131,7 @@ public class LinearizerTest {
     public void linearizeSyto() throws Exception {
         Path t = getTestPath().resolve("datasets/syto");
         if (!Files.exists(t)) {
-            executeCommand(t.getParent().toFile(), "git", "clone", "https://github.com/SashkoTar/syto");
+            Linearizer.executeCommand(false, t.getParent().toFile(), "git", "clone", "https://github.com/SashkoTar/syto");
         }
 
         testLinearizerOnRepository(
@@ -152,7 +145,7 @@ public class LinearizerTest {
     public void linearizeModbusRS() throws Exception {
         Path t = getTestPath().resolve("datasets/modbus-rs");
         if (!Files.exists(t)) {
-            executeCommand(t.getParent().toFile(), "git", "clone", "https://github.com/hirschenberger/modbus-rs.git");
+            Linearizer.executeCommand(false, t.getParent().toFile(), "git", "clone", "https://github.com/hirschenberger/modbus-rs.git");
         }
 
         testLinearizerOnRepository(

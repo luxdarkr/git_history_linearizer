@@ -13,7 +13,9 @@ import org.eclipse.jgit.revwalk.RevWalk;
 import org.eclipse.jgit.storage.file.FileRepositoryBuilder;
 
 import java.io.*;
+import java.nio.file.Paths;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -120,18 +122,7 @@ public class Linearizer {
             if (newMessage != null) {
                 String repoGitPath = repo.getDirectory().toString();
                 String repoPath = repoGitPath.substring(0, repoGitPath.length() - 4);
-                List<String> command = new LinkedList() {{
-                    add("./cherry_pick.cmd");
-                    add(repoPath);
-                    add(getCommitSHA(curCommit));
-                    add(newMessage.strip());
-                    if (curCommit.getParents().length != 0) {
-                        add("-m 1");
-                    }
-                    add("-Xrename-threshold=20%");
-                }};
-                ProcessBuilder builder = new ProcessBuilder(command);
-                builder = builder.directory(new File(System.getProperty("user.dir")));
+
                 CherryPickResult cpRes = null;
                 if (curCommit.getParents().length != 0) {
                     cpRes = git.cherryPick().include(curCommit).setMainlineParentNumber(1).call();
@@ -139,14 +130,16 @@ public class Linearizer {
                 else {
                     cpRes = git.cherryPick().include(curCommit).call();
                 }
+                executeCommand(true, Paths.get(repoPath).toFile(),
+                    "git", "checkout", "--theirs", ".");
+                executeCommand(true, Paths.get(repoPath).toFile(),
+                        "git", "add", ".");
+                executeCommand(true, Paths.get(repoPath).toFile(),
+                        "git", "commit", "-m", "resolve conflict");
+                executeCommand(true, Paths.get(repoPath).toFile(),
+                        "git", "commit", "--amend", newMessage.strip());
 
-                Process cpProcess = builder.start();
-                BufferedReader br = new BufferedReader(new InputStreamReader(cpProcess.getInputStream()));
                 lastCommit = cpRes.getNewHead();
-                String line;
-                while ((line = br.readLine()) != null) {
-                    System.out.println(line);
-                }
             }
         }
 
@@ -291,5 +284,19 @@ public class Linearizer {
 
         original = o.toString();
         return original;
+    }
+
+    public static void executeCommand(boolean verbose, File location, String ... command) throws IOException, InterruptedException {
+        if (verbose) System.out.println("Execute command " + Arrays.toString(command));
+        ProcessBuilder pb = new ProcessBuilder(command);
+        pb.directory(location);
+        Process pr = pb.start();
+        if (pr.waitFor(5, TimeUnit.SECONDS) && verbose) {
+            BufferedReader br = new BufferedReader(new InputStreamReader(pr.getInputStream()));
+            String line;
+            while ((line = br.readLine()) != null) {
+                System.out.println(line);
+            }
+        }
     }
 }
