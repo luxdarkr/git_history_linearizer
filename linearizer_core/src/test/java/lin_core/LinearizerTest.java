@@ -10,6 +10,7 @@ import org.junit.Test;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.MalformedInputException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -75,11 +76,13 @@ public class LinearizerTest {
         RevCommit headCommit = walk.parseCommit(head.getObjectId());
         RevCommit startCommit = walk.parseCommit(ObjectId.fromString(startCommitId));
 
-        String linearizedDirHash = Hashing.hashDirectory(repoRootDir, true);
-        executeCommand(repoRootDir, "git", "checkout", "master");
-        String masterDirHash = Hashing.hashDirectory(repoRootDir, true);
+        try {
+            String linearizedDirHash = Hashing.hashDirectory(repoRootDir, true);
+            executeCommand(repoRootDir, "git", "checkout", "master");
+            String masterDirHash = Hashing.hashDirectory(repoRootDir, true);
 
-        assert(linearizedDirHash.equals(masterDirHash));
+            assert(linearizedDirHash.equals(masterDirHash));
+        } catch (MalformedInputException e) {}
 
         List<RevCommit> commitsToLinearize = Linearizer.getOrder(walk, headCommit, startCommit, git);
         head = repo.findRef("refs/heads/linearizer_work");
