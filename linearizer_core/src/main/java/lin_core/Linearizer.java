@@ -120,7 +120,7 @@ public class Linearizer {
                 String repoGitPath = repo.getDirectory().toString();
                 String repoPath = repoGitPath.substring(0, repoGitPath.length() - 4);
                 List<String> command = new LinkedList() {{
-                    add("cherry_pick.cmd");
+                    add("./cherry_pick.cmd");
                     add(repoPath);
                     add(getCommitSHA(curCommit));
                     add(newMessage.strip());
@@ -131,6 +131,12 @@ public class Linearizer {
                 }};
                 ProcessBuilder builder = new ProcessBuilder(command);
                 builder = builder.directory(new File(System.getProperty("user.dir")));
+                if (curCommit.getParents().length != 0) {
+                    git.cherryPick().include(curCommit).setMainlineParentNumber(1).call();
+                }
+                else {
+                    git.cherryPick().include(curCommit).call();
+                }
                 Process cpProcess = builder.start();
                 BufferedReader br = new BufferedReader(new InputStreamReader(cpProcess.getInputStream()));
 
