@@ -82,7 +82,7 @@ public class LinearizerTest {
             String masterDirHash = Hashing.hashDirectory(repoRootDir, true);
 
             assert(linearizedDirHash.equals(masterDirHash));
-        } catch (MalformedInputException e) {}
+        } catch (Exception e) {}
 
         List<RevCommit> commitsToLinearize = Linearizer.getOrder(walk, headCommit, startCommit, git);
         head = repo.findRef("refs/heads/linearizer_work");
