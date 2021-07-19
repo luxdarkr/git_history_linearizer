@@ -78,17 +78,7 @@ public class LinearizerTest {
         String linearizedDirHash = Hashing.hashDirectory(repoRootDir, true);
         executeCommand(repoRootDir, "git", "checkout", "master");
         String masterDirHash = Hashing.hashDirectory(repoRootDir, true);
-        //System.out.println(linearizedDirHash);
-        //System.out.println(masterDirHash);
-        String[] r1 = linearizedDirHash.split("\n");
-        String[] r2 = masterDirHash.split("\n");
-        for (int i = 0; i < r1.length; i++) {
-            if (r1[i].compareTo(r2[i]) != 0) {
-                System.out.println(r1[i] + " | " + r2[i]);
-            }
-        }
-        System.out.println(linearizedDirHash);
-        System.out.println(masterDirHash);
+
         assert(linearizedDirHash.equals(masterDirHash));
 
         List<RevCommit> commitsToLinearize = Linearizer.getOrder(walk, headCommit, startCommit, git);
@@ -96,7 +86,6 @@ public class LinearizerTest {
 
         RevCommit commit = walk.parseCommit(head.getObjectId());
         int ncommits = 0;
-
 
         while (!commit.equals(startCommit)) {
             RevCommit parentCommit = walk.parseCommit(commit.getId());
@@ -109,7 +98,7 @@ public class LinearizerTest {
         assert(ncommits == commitsToLinearize.size());
     }
 
-    /*@Test
+    @Test
     public void linearizeRepoSimple() throws Exception {
         Path t = getTestPath().resolve("datasets/git_test_simple");
         if (!Files.exists(t)) {
@@ -154,7 +143,7 @@ public class LinearizerTest {
                 "refs/heads/master",
                 "8750ebe7aa4c402817938c7f38d0db78e1853ebc"
         );
-    }*/
+    }
 
     @Test
     public void linearizeModbusRS() throws Exception {
