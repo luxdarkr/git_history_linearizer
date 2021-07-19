@@ -78,7 +78,18 @@ public class LinearizerTest {
         String linearizedDirHash = Hashing.hashDirectory(repoRootDir, true);
         executeCommand(repoRootDir, "git", "checkout", "master");
         String masterDirHash = Hashing.hashDirectory(repoRootDir, true);
-        //assert(linearizedDirHash.equals(masterDirHash));
+        //System.out.println(linearizedDirHash);
+        //System.out.println(masterDirHash);
+        String[] r1 = linearizedDirHash.split("\n");
+        String[] r2 = masterDirHash.split("\n");
+        for (int i = 0; i < r1.length; i++) {
+            if (r1[i].compareTo(r2[i]) != 0) {
+                System.out.println(r1[i] + " | " + r2[i]);
+            }
+        }
+        System.out.println(linearizedDirHash);
+        System.out.println(masterDirHash);
+        assert(linearizedDirHash.equals(masterDirHash));
 
         List<RevCommit> commitsToLinearize = Linearizer.getOrder(walk, headCommit, startCommit, git);
         head = repo.findRef("refs/heads/linearizer_work");
