@@ -20,6 +20,7 @@ exit $?
 @ %4 %5 - cherry-pick args
 cd %1
 git cherry-pick %4 %5 %2
+git checkout --theirs .
 git add .
 git commit -m "resolve conflict"
 git commit --amend -m %3
