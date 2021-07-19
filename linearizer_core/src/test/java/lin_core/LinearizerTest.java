@@ -69,13 +69,15 @@ public class LinearizerTest {
         RevCommit headCommit = walk.parseCommit(head.getObjectId());
         RevCommit startCommit = walk.parseCommit(ObjectId.fromString(startCommitId));
 
-        try {
+//        try {
             String linearizedDirHash = Hashing.hashDirectory(repoRootDir, true);
             Linearizer.executeCommand(false, repoRootDir, "git", "checkout", "master");
             String masterDirHash = Hashing.hashDirectory(repoRootDir, true);
 
-            assert(linearizedDirHash.equals(masterDirHash));
-        } catch (Exception e) {}
+            if (!linearizedDirHash.equals(masterDirHash))
+                throw new Exception("Not equals");
+//            assert(linearizedDirHash.equals(masterDirHash));
+//        } catch (Exception e) {}
 
         List<RevCommit> commitsToLinearize = Linearizer.getOrder(walk, headCommit, startCommit, git);
         head = repo.findRef("refs/heads/linearizer_work");

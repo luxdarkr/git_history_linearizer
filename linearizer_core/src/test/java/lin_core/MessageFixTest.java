@@ -25,7 +25,7 @@ public class MessageFixTest {
         Map<String, String[]> settingsMap;
         Settings s;
 
-        settingsMap = new HashMap<>() {{
+        settingsMap = new HashMap<String, String[]>() {{
             put("strip", emptyParams);
             put("fixCase", emptyParams);
         }};
@@ -34,7 +34,7 @@ public class MessageFixTest {
         assert(s.fixCase);
         assert(s.badStarts == null);
 
-        settingsMap = new HashMap<>() {{
+        settingsMap = new HashMap<String, String[]>() {{
             put("badStarts", new String[]{"one", "two", "three"});
             put("fixBig", emptyParams);
         }};
@@ -50,7 +50,7 @@ public class MessageFixTest {
         Map<String, String[]> settingsMap;
         Settings s;
 
-        settingsMap = new HashMap<>() {{
+        settingsMap = new HashMap<String, String[]>() {{
             put("badStarts", new String[] {"*", "+"});
         }};
 
@@ -66,7 +66,7 @@ public class MessageFixTest {
         Map<String, String[]> settingsMap;
         Settings s;
 
-        settingsMap = new HashMap<>() {{
+        settingsMap = new HashMap<String, String[]>() {{
             put("fixBig", emptyParams);
         }};
 
@@ -82,7 +82,7 @@ public class MessageFixTest {
         Map<String, String[]> settingsMap;
         Settings s;
 
-        settingsMap = new HashMap<>() {{
+        settingsMap = new HashMap<String, String[]>() {{
             put("fixCase", emptyParams);
         }};
 
@@ -98,7 +98,7 @@ public class MessageFixTest {
         Map<String, String[]> settingsMap;
         Settings s;
 
-        settingsMap = new HashMap<>() {{
+        settingsMap = new HashMap<String, String[]>() {{
             put("strip", emptyParams);
         }};
 
@@ -114,7 +114,7 @@ public class MessageFixTest {
         Map<String, String[]> settingsMap;
         Settings s;
 
-        settingsMap = new HashMap<>() {{
+        settingsMap = new HashMap<String, String[]>() {{
             put("strip", emptyParams);
             put("fixCase", emptyParams);
         }};
@@ -131,7 +131,7 @@ public class MessageFixTest {
         Map<String, String[]> settingsMap;
         Settings s;
 
-        settingsMap = new HashMap<>() {{
+        settingsMap = new HashMap<String, String[]>() {{
             put("badStarts", new String[] {"*", "+"});
             put("fixBig", emptyParams);
         }};
@@ -148,7 +148,7 @@ public class MessageFixTest {
         Map<String, String[]> settingsMap;
         Settings s;
 
-        settingsMap = new HashMap<>() {{
+        settingsMap = new HashMap<String, String[]>() {{
             put("badStarts", new String[] {"*", "+"});
             put("fixBig", emptyParams);
             put("strip", emptyParams);
