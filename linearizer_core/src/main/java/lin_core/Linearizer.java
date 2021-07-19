@@ -1,5 +1,6 @@
 package lin_core;
 
+import org.eclipse.jgit.api.CherryPickResult;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.diff.DiffEntry;
@@ -131,15 +132,17 @@ public class Linearizer {
                 }};
                 ProcessBuilder builder = new ProcessBuilder(command);
                 builder = builder.directory(new File(System.getProperty("user.dir")));
+                CherryPickResult cpRes = null;
                 if (curCommit.getParents().length != 0) {
-                    git.cherryPick().include(curCommit).setMainlineParentNumber(1).call();
+                    cpRes = git.cherryPick().include(curCommit).setMainlineParentNumber(1).call();
                 }
                 else {
-                    git.cherryPick().include(curCommit).call();
+                    cpRes = git.cherryPick().include(curCommit).call();
                 }
+
                 Process cpProcess = builder.start();
                 BufferedReader br = new BufferedReader(new InputStreamReader(cpProcess.getInputStream()));
-
+                lastCommit = cpRes.getNewHead();
                 String line;
                 while ((line = br.readLine()) != null) {
                     System.out.println(line);
