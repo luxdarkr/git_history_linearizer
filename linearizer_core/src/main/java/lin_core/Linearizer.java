@@ -8,7 +8,6 @@ import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.Ref;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.revwalk.RevCommit;
-import org.eclipse.jgit.revwalk.RevTree;
 import org.eclipse.jgit.revwalk.RevWalk;
 import org.eclipse.jgit.storage.file.FileRepositoryBuilder;
 
@@ -17,10 +16,7 @@ import java.nio.file.Paths;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
-import static java.util.List.of;
 
 public class Linearizer {
     public static class Settings {
@@ -137,7 +133,7 @@ public class Linearizer {
                 executeCommand(true, Paths.get(repoPath).toFile(),
                         "git", "commit", "-m", "resolve conflict");
                 executeCommand(true, Paths.get(repoPath).toFile(),
-                        "git", "commit", "--amend", "-m", newMessage.strip());
+                        "git", "commit", "--amend", "-m", newMessage.trim());
 
                 lastCommit = cpRes.getNewHead();
             }
@@ -270,7 +266,7 @@ public class Linearizer {
     }
 
     private static String strip(String original) throws NullPointerException {
-        return original.strip();
+        return original.trim();
     }
 
     private static String fixBigCommitMessage(String original) throws NullPointerException {
