@@ -161,9 +161,14 @@ public class LinearizerToolWindow {
         // Check Ref ID
         String refID = refIDTextField.getText();
         if (!refID.matches("^[^\\\\/]+([\\\\/][^\\\\/]+){2}$")) {
-            setRedLabel("Incorrect branch name");
-            return;
+            if (refID.contains("/")) {
+                setRedLabel("Incorrect branch name");
+                return;
+            } else {
+                refID = "refs/heads/" + refID;
+            }
         }
+        System.out.println(refID);
 
         // Check start commit ID
         String startCommit = startCommitTextField.getText();
@@ -171,9 +176,6 @@ public class LinearizerToolWindow {
             setRedLabel("Incorrect start commit id");
             return;
         }
-
-        //LinStateService c = ServiceManager.getService(LinStateService.class);
-        //c.setStartCommit(startCommitTextField.getText());
 
         // Run linearizer
         try {
@@ -199,7 +201,7 @@ public class LinearizerToolWindow {
 
     // Set RefID default value
     void onRefIDRefreshButton() {
-        refIDTextField.setText("refs/heads/master");
+        refIDTextField.setText("master");
     }
 
     // Display red status message

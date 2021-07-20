@@ -137,7 +137,7 @@ public class Linearizer {
                 executeCommand(true, Paths.get(repoPath).toFile(),
                         "git", "commit", "-m", "resolve conflict");
                 executeCommand(true, Paths.get(repoPath).toFile(),
-                        "git", "commit", "--amend", newMessage.strip());
+                        "git", "commit", "--amend", "-m", newMessage.strip());
 
                 lastCommit = cpRes.getNewHead();
             }
